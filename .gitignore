@@ -1,0 +1,14 @@
+literature
+*.pyc
+
+*.gz
+
+*.pdf
+*.dvi
+*.log
+*.aux
+*.toc
+*.out
+
+*.bbl
+*.blg
