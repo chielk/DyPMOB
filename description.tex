@@ -17,15 +17,21 @@ with a Multi-Dimensional Reward}
 		time-step an agent $i$ with an empty buffer may get a new message with
 		probability $p_i(m)$.
 		One of the goals is to optimise the total throughput of all the agents.
-		This problem has been solved for POMDPs \cite{ooi1996decentralized}, but in this case we would
-		also like to avoid dominance of a single agent over the channel.
-		By representing the reward as a vector, we can calculate the optimal
-		policy $\pi^*$, for any weight vector $\vec{w}$ if we know the reward
-		vector $\vec{r}$. The scalar reward $r = \vec{w} \cdot \vec{r}$
+		This problem has been solved for POMDPs \cite{ooi1996decentralized}, but
+		in this case we would also like to avoid dominance of a single agent over
+		the channel.  By representing the reward as a vector, we can calculate
+		the optimal policy $\pi^*$, for any weight vector $\vec{w}$ if we know
+		the reward vector $\vec{r}$. The scalar reward $r = \vec{w} \cdot
+		\vec{r}$
+	% section task_description (end)
 
-		There are several ways to represent throughput and dominance in a
-		vector. One would be to have a two-dimensional vector that contains the
-		total throughput and some measure of dominance, for instance entropy or
+	\section{Approach}
+	\label{sec:approach}
+		\subsection{Reward Representation}
+		\label{sub:reward_representation}
+		There are several ways to represent throughput and dominance in a vector.
+		One would be to have a two-dimensional vector that contains the total
+		throughput and some measure of dominance, for instance entropy or
 		variance. An advantage of this approach is that the size of the reward
 		vector is independent of the number of agents.
 
@@ -38,12 +44,28 @@ with a Multi-Dimensional Reward}
 		reduced, because every vector is equal to all of its permutations
 		(provided we reorder the state vector and the reward vector in the same
 		way).
+		For these reasons the second approach was chosen.
+		% subsection reward_representation (end)
 
+		\subsection{Undesirability of collisions}
+		\label{sub:undesirability_of_collisions}
 		In a communication setting, a collision would have the same effect as
 		when no agent would send a message. In some settings (such as traffic),
 		however a collision may be less desirable. In those cases an extra
 		dimension should be added for the number of collisions.
-	% section task_description (end)
-		\bibliographystyle{apalike}
-		\bibliography{references}
+		% subsection undesirability_of_collisions (end)
+
+		\subsection{Reward Measure}
+		\label{sub:reward_measure}
+		Something about Convex Hull and Pareto-optimal set solutions.
+		% subsection reward_measure (end)
+	% section approach (end)
+
+	\section{Planning}
+	\label{sec:planning}
+
+	% section planning (end)
+
+	\bibliographystyle{apalike}
+	\bibliography{references}
 \end{document}
