@@ -20,14 +20,29 @@ with a Multi-Dimensional Reward}
 		This problem has been solved for POMDPs \cite{ooi1996decentralized}, but in this case we would
 		also like to avoid dominance of a single agent over the channel.
 		By representing the reward as a vector, we can calculate the optimal
-		policy $\pi$, for any weight vector $\vec{w}$ if we know the reward
-		vector $\vec{r}$.
+		policy $\pi^*$, for any weight vector $\vec{w}$ if we know the reward
+		vector $\vec{r}$. The scalar reward $r = \vec{w} \cdot \vec{r}$
 
-		There are several several ways to represent throughput and dominance in a
+		There are several ways to represent throughput and dominance in a
 		vector. One would be to have a two-dimensional vector that contains the
 		total throughput and some measure of dominance, for instance entropy or
-		variance.
-		Another way is to represent the vector as an $n$-dimensional 
+		variance. An advantage of this approach is that the size of the reward
+		vector is independent of the number of agents.
+
+		Another way is to represent the vector as an $n$-dimensional vector,
+		where $n$ is the number of agents, and each value represents the
+		throughput of the corresponding agent. An advantage is that the vector
+		contains more information, but there are many more states when the number
+		of agents increases. It does however allow for prioritising messages (by
+		changing the one of the weights), and the number of states can be greatly
+		reduced, because every vector is equal to all of its permutations
+		(provided we reorder the state vector and the reward vector in the same
+		way).
+
+		In a communication setting, a collision would have the same effect as
+		when no agent would send a message. In some settings (such as traffic),
+		however a collision may be less desirable. In those cases an extra
+		dimension should be added for the number of collisions.
 	% section task_description (end)
 		\bibliographystyle{apalike}
 		\bibliography{references}
