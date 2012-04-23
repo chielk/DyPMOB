@@ -1,0 +1,34 @@
+% vim: set spell : spelllang=en_gb
+\author{Chiel Kooijman - 5743028}
+\title{Optimising Communication over a Multiple Access Broadcasting Channel
+with a Multi-Dimensional Reward}
+\documentclass{article}
+\usepackage{graphicx,amsmath}
+\begin{document}
+	\maketitle
+	\section{Task Description}
+	\label{sec:task_description}
+		The task at hand is one of communication over a single channel.
+		Multiple agents broadcast messages, but only one message can be sent at
+		any time, otherwise conflicts will arise and no message will come
+		through. After a message is sent, the agents will know whether a message
+		was sent, a conflict has arisen, or no message was sent.
+		Agents have a single buffer that may contain a message. At any concrete
+		time-step an agent $i$ with an empty buffer may get a new message with
+		probability $p_i(m)$.
+		One of the goals is to optimise the total throughput of all the agents.
+		This problem has been solved for POMDPs \cite{ooi1996decentralized}, but in this case we would
+		also like to avoid dominance of a single agent over the channel.
+		By representing the reward as a vector, we can calculate the optimal
+		policy $\pi$, for any weight vector $\vec{w}$ if we know the reward
+		vector $\vec{r}$.
+
+		There are several several ways to represent throughput and dominance in a
+		vector. One would be to have a two-dimensional vector that contains the
+		total throughput and some measure of dominance, for instance entropy or
+		variance.
+		Another way is to represent the vector as an $n$-dimensional 
+	% section task_description (end)
+		\bibliographystyle{apalike}
+		\bibliography{references}
+\end{document}
