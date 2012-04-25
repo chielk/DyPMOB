@@ -11,7 +11,12 @@ TARGETS=$(patsubst %.tex,%.pdf,$(TEXFILES))
 RERUN = "(There were undefined references|Rerun to get (cross-references|the bars) right|Table widths have changed. Rerun LaTeX.|Linenumber reference failed)"
 RERUNBIB = "No file.*\.bbl|Citation.*undefined"
 
-all: all-recursive $(TARGETS)
+#all: all-recursive $(TARGETS)
+all:
+	pdflatex description.tex
+	bibtex description.aux
+	pdflatex description.tex
+	pdflatex description.tex
 
 clean: clean-recursive
 	@rm -f *.aux *.log *.bbl *.blg *.brf *.cb *.ind *.idx *.ilg  \
