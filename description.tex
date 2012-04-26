@@ -74,8 +74,7 @@
 	\vec{V}^\pi$ \citep{vamplew2011empirical}, in a reward representation that
 	can dynamically adapt priorities by changing the weights
 	\citep{barrett2008learning,natarajan2005dynamic}.
-	The definition for the Pareto-optimal set is given in equation
-	\ref{eq:pareto}.
+	Equation \ref{eq:pareto} shows the definition for the Pareto-optimal set.
 	\begin{equation}
 		\label{eq:pareto}
 		\Big\{ V\, \Big| \, \forall V'[ V \neq V' \land \exists n [V_n > V'_n]] \Big\}
@@ -85,7 +84,7 @@
 
 	\begin{figurehere}
 		\centering
-		\includegraphics[scale=0.65]{pareto}
+		\includegraphics[scale=0.68]{images/pareto}
 		\captionof{figure}{Pareto-optimal set in a two-dimensional system}
 	   \label{fig:pareto}
 	\end{figurehere}
@@ -117,7 +116,8 @@
 		weights), and the number of states can be greatly reduced, because every
 		vector is equal to all of its permutations (provided we reorder the state
 		vector and the reward vector in the same way).
-		For example in a two-agent system, a state with a reward and weight
+		For example in a two-agent system, a state with a reward vector $\vec{r}$
+		and function parameter $\vec{\theta}$
 		vectors
 		$$ f_{\vec{\theta}}(\vec{r})~\textrm{with}~\vec{r} = \begin{bmatrix}
 			7\\
@@ -150,7 +150,6 @@
 	Find and read additional literature on the subject.\\
 	Choose the representation and design an algorithm and describe optimisations
 	etc.\\
-	Make a presentation before Thursday.\\
 	Implement the system in \texttt{C++} so that it may be extended with the
 	MADP toolbox.
 	% section planning (end)
