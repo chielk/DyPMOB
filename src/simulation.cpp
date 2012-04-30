@@ -1,6 +1,7 @@
 #include "config.h"
-#include "simulation.h"
 #include "agent.h"
+#include "channel.h"
+#include "simulation.h"
 #include <iostream>
 #include <unistd.h>
 #include <cstdlib>
@@ -48,6 +49,9 @@ int main(int argc, char **argv)
 			cout << "Seed:\t" << seed << endl;
 	 }
 	 srand(seed);
+
+	 // Start simulator
+	 Channel channel = Channel(num_agents, p_new_msg);
 
 	 return 0;
 }
