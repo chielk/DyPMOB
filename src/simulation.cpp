@@ -1,19 +1,12 @@
+#include "config.h"
 #include "simulation.h"
+#include "agent.h"
 #include <iostream>
-#include <limits>
-#include <ctime>
-#include <cstdlib>
 #include <unistd.h>
+#include <cstdlib>
+#include <ctime>
 
 using namespace std;
-
-const int MAX_INT = numeric_limits<int>::max();
-
-
-inline bool random_b(float p)
-{
-	return p * MAX_INT > rand();
-}
 
 
 int main(int argc, char **argv)
