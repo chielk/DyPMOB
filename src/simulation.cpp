@@ -14,7 +14,7 @@ int main(int argc, char **argv)
 {
 	bool quiet = false;
 	bool seedflg = false;
-	int seed;
+	int seed = 0;
 
 	// Get command-line options
 	char c;

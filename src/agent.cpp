@@ -10,12 +10,13 @@ inline bool random_b(float p)
 	return p * MAX_INT > rand();
 }
 
-Agent::Agent(float prob)
+Agent::Agent(int agent_id, float prob)
 {
 	p = prob;
 	refresh();
 	done = false;
 	iteration = 0;
+	id = agent_id;
 }
 
 bool Agent::refresh()
@@ -32,10 +33,23 @@ int Agent::send()
 {
 	action = SEND;
 	refresh();
+	iteration++;
+	return action;
 }
 
 int Agent::wait()
 {
 	action = WAIT;
 	refresh();
+	iteration++;
+	return action;
+}
+
+int Agent::act()
+{
+	if (iteration % id == 0) {
+		return send();
+	} else {
+		return wait();
+	}
 }
