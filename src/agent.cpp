@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include "agent.h"
 #include "channel.h"
+#include "config.h"
 
 const int MAX_INT = std::numeric_limits<int>::max();
 
@@ -45,11 +46,18 @@ int Agent::wait()
 	return action;
 }
 
-int Agent::act()
+int Agent::default_policy()
 {
 	if (iteration % id == 0) {
 		return send();
 	} else {
 		return wait();
 	}
+}
+
+inline int Agent::act()
+{
+#if POLICY == DEFAULT_POLICY
+	return default_policy();
+#endif
 }

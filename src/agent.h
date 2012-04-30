@@ -15,6 +15,7 @@ class Agent {
 		int action;	// Last action performed by agent
 		int send();
 		int wait();
+		int default_policy();
 		int act();
 		bool refresh();
 	private:

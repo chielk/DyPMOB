@@ -1,9 +1,8 @@
 #include "config.h"
 #include "agent.h"
 #include "channel.h"
-#include "simulation.h"
-#include <iostream>
 #include <unistd.h>
+#include <iostream>
 #include <cstdlib>
 #include <ctime>
 
