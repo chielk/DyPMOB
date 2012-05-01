@@ -50,7 +50,11 @@ int main(int argc, char **argv)
 	 srand(seed);
 
 	 // Start simulator
+	 if (!quiet)
+		 cout << "Starting simulator: creating channel... ";
 	 Channel channel = Channel(num_agents, p_new_msg);
+	 if (!quiet)
+		 cout << "done" << endl;
 
 	 return 0;
 }

@@ -55,9 +55,7 @@ int Agent::default_policy()
 	}
 }
 
-inline int Agent::act()
+void Agent::receive_feedback(int feedback)
 {
-#if POLICY == DEFAULT_POLICY
-	return default_policy();
-#endif
+	return;
 }
