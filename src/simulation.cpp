@@ -11,7 +11,7 @@ using namespace std;
 
 int main(int argc, char **argv)
 {
-	bool quiet = false;
+	bool quiet=false;
 	bool seedflg = false;
 	int seed = 0;
 
@@ -58,7 +58,11 @@ int main(int argc, char **argv)
 
 	 // Run simulation
 	 for (int i =0; i < 100; i++) {
-		 channel.run_turn();
+		 if (quiet) {
+			 channel.run_turn();
+		 } else {
+			 cout << channel.run_turn() << endl;
+		 }
 	 }
 	 cout << "Throughput: " << channel.get_throughput() << endl;
 

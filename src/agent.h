@@ -3,8 +3,6 @@
 
 #include "config.h"
 
-static const int ALREADY_DONE = 0;
-
 // Returns a random boolean. True with probability p.
 inline bool random_b(float p=0.5);
 

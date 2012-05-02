@@ -3,9 +3,7 @@
 #include "agent.h"
 #include "channel.h"
 #include "config.h"
-#include <iostream>
 
-using namespace std;
 inline bool random_b(float p)
 {
 	const static int MAX_INT = std::numeric_limits<int>::max();

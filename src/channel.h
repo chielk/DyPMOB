@@ -16,7 +16,7 @@ using namespace std;
 class Channel {
 	public:
 		Channel(int num_agents, float p);
-		void run_turn();
+		int run_turn();
 		int get_throughput();
 	private:
 		vector<Agent> agents;

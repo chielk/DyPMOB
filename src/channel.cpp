@@ -10,7 +10,7 @@ Channel::Channel(int num_agents, float p)
 	throughput = 0;
 }
 
-void Channel::run_turn()
+int Channel::run_turn()
 {
 	int feedback;
 	int total_sent = 0;
@@ -22,20 +22,18 @@ void Channel::run_turn()
 	switch (total_sent) {
 		case 0:
 			feedback = EMPTY;
-			cout << "EMPTY" << endl;
 			break;
 		case 1:
 			feedback = SUCCESS;
-			cout << "SUCCESS" << endl;
 			throughput++;
 			break;
 		default:
-			cout << "COLLISION" << endl;
 			feedback = COLLISION;
 	}
 	for (it=agents.begin(); it < agents.end(); it++) {
 		it->receive_feedback(feedback);
 	}
+	return feedback;
 }
 
 int Channel::get_throughput()
