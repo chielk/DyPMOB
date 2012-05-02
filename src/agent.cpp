@@ -3,11 +3,12 @@
 #include "agent.h"
 #include "channel.h"
 #include "config.h"
+#include <iostream>
 
-const int MAX_INT = std::numeric_limits<int>::max();
-
+using namespace std;
 inline bool random_b(float p)
 {
+	const static int MAX_INT = std::numeric_limits<int>::max();
 	return p * MAX_INT > rand();
 }
 
@@ -15,23 +16,22 @@ Agent::Agent(int agent_id, float prob)
 {
 	p = prob;
 	refresh();
-	done = false;
-	iteration = 0;
+	iteration = 1;
 	id = agent_id;
 }
 
 bool Agent::refresh()
 {
-	if (done)
-		throw ALREADY_DONE;
 	if (!msg)
 		msg = random_b(p);
-	done = false;
 	return msg;
 }
 
 int Agent::send()
 {
+	if (!msg)
+		return wait();
+	msg = false;
 	action = SEND;
 	refresh();
 	iteration++;
@@ -48,7 +48,7 @@ int Agent::wait()
 
 int Agent::default_policy()
 {
-	if (iteration % id == 0) {
+	if (iteration % 2 == id) {
 		return send();
 	} else {
 		return wait();

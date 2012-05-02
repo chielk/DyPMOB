@@ -27,7 +27,6 @@ class Agent {
 		int iteration;
 		int id;
 		float p;		// probability of getting a new message
-		bool done;	// has perfomed action
 		bool msg;
 };
 

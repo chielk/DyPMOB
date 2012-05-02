@@ -17,8 +17,10 @@ class Channel {
 	public:
 		Channel(int num_agents, float p);
 		void run_turn();
+		int get_throughput();
 	private:
 		vector<Agent> agents;
+		int throughput;
 };
 
 #endif

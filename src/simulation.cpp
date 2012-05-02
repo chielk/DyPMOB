@@ -43,9 +43,9 @@ int main(int argc, char **argv)
 
 	 // Initialise random generator
 	 if (!seedflg) {
-		seed = time(0);
-		if (!quiet||seedflg)
-			cout << "Seed:\t" << seed << endl;
+		 seed = time(0);
+		 if (!quiet||seedflg)
+			 cout << "Seed:\t" << seed << endl;
 	 }
 	 srand(seed);
 
@@ -55,6 +55,12 @@ int main(int argc, char **argv)
 	 Channel channel = Channel(num_agents, p_new_msg);
 	 if (!quiet)
 		 cout << "done" << endl;
+
+	 // Run simulation
+	 for (int i =0; i < 100; i++) {
+		 channel.run_turn();
+	 }
+	 cout << "Throughput: " << channel.get_throughput() << endl;
 
 	 return 0;
 }
