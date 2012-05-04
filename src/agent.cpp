@@ -18,6 +18,11 @@ Agent::Agent(int agent_id, float prob)
 	id = agent_id;
 }
 
+int Agent::get_id()
+{
+	return id;
+}
+
 bool Agent::refresh()
 {
 	if (!msg)

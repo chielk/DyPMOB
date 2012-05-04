@@ -10,6 +10,7 @@ class Agent {
 	public:
 		Agent(int agent_id, float p);
 		int action;	// Last action performed by agent
+		int get_id();
 		void receive_feedback(int feedback);
 		int default_policy();
 		inline int act()
