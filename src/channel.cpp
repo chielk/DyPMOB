@@ -42,7 +42,7 @@ int Channel::run_turn()
 	return feedback;
 }
 
-vector<int>* Channel::get_throughput()
+vector<int> Channel::get_throughput()
 {
-	return &throughput;
+	return throughput;
 }

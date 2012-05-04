@@ -9,12 +9,12 @@
 using namespace std;
 
 
-void print_throughput(vector<int>* throughput)
+void print_throughput(const vector<int> throughput)
 {
 	int total_throughput = 0;
 	cout << "Throughput: [";
-	vector<int>::const_iterator thru = throughput->begin();
-	for (; thru < throughput->end()-1; thru++) {
+	vector<int>::const_iterator thru = throughput.begin();
+	for (; thru < throughput.end()-1; thru++) {
 		cout << *thru << ", ";
 		total_throughput += *thru;
 	}
