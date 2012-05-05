@@ -1,7 +1,7 @@
 CC=g++
 CFLAGS=-O3 -Wall
 
-simulation: simulation.cpp config.h channel.o agent.o
+simulation: simulation.cpp channel.o agent.o
 	$(CC) $(CFLAGS) *.o -o simulation simulation.cpp
 
 channel.o: channel.cpp channel.h

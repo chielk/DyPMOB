@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include "agent.h"
 #include "channel.h"
-#include "config.h"
 
 inline bool random_b(float p)
 {
@@ -10,8 +9,9 @@ inline bool random_b(float p)
 	return p * MAX_INT > rand();
 }
 
-Agent::Agent(int agent_id, float prob)
+Agent::Agent(int agent_id, int total, float prob)
 {
+	n = total;
 	p = prob;
 	refresh();
 	iteration = 1;
@@ -51,7 +51,7 @@ int Agent::wait()
 
 int Agent::default_policy()
 {
-	if (iteration % 2 == id) {
+	if (iteration % n == id) {
 		return send();
 	} else {
 		return wait();

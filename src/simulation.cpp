@@ -1,4 +1,4 @@
-#include "config.h"
+//#include "config.h"
 #include "agent.h"
 #include "channel.h"
 #include <unistd.h>
@@ -19,7 +19,7 @@ void print_throughput(const vector<int> throughput)
 		total_throughput += *thru;
 	}
 	total_throughput += *thru;
-	cout << *thru << "]" << " (" << total_throughput << ")" << endl;
+	cout << *thru << "]\t(" << total_throughput << ")" << endl;
 }
 
 
@@ -29,12 +29,24 @@ int main(int argc, char **argv)
 	bool seedflg = false;
 	int seed = 0;
 	int repeat = 100;
+	int n_agents = 2;
+	float p_msg = 0.5;
 
 	// Get command-line options
 	char c;
 	int errflg = 0;
-	while ((c = getopt(argc, argv, ":qs:r:")) != -1) {
+	while ((c = getopt(argc, argv, ":qs:r:n:p:")) != -1) {
 		switch (c) {
+			case 'p':
+				p_msg = atof(optarg);
+				if (p_msg > 1.0 || p_msg < 0.0) {
+					cerr << "Error: p should be between 0 and 1" << endl;
+					errflg++;
+				}
+				break;
+			case 'n':
+				n_agents = atoi(optarg);
+				break;
 			case 'r':
 				repeat = atoi(optarg);
 				break;
@@ -45,7 +57,7 @@ int main(int argc, char **argv)
 			case 'q':
 				quiet = true;
 				break;
-			case ':':       /* -s without operand */
+			case ':':       /* -s, -n, -p or -r without operand */
 				cerr << "Option -" << char(optopt) << " requires an operand" << endl;
 				errflg++;
 				break;
@@ -55,7 +67,8 @@ int main(int argc, char **argv)
 		}
 	}
 	if (errflg) {
-		cout << "Usage: " << argv[0] << " [-q] [-s <seed>]" << endl;
+		cout << "Usage: " << argv[0] << \
+			" [-q] [-s <seed>] [-r <repeat>] [-n <agents>] [-p <P>]" << endl;
 		exit(2);
 	}
 
@@ -68,16 +81,16 @@ int main(int argc, char **argv)
 	srand(seed);
 
 	// Start simulator
-	if (!quiet)
-		cout << "Starting simulator: creating channel... ";
-	Channel channel = Channel(num_agents, p_new_msg);
-	if (!quiet)
-		cout << "done" << endl;
+	Channel channel = Channel(n_agents, p_msg);
 
 	// Run simulation
+	channel.run(repeat);
+
+#if 0
 	for (int i = repeat; i > 0; i--) {
 		channel.run_turn();
 	}
+#endif
 
 	print_throughput(channel.get_throughput());
 	return 0;

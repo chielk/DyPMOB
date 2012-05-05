@@ -5,7 +5,7 @@
 Channel::Channel(int num_agents, float p)
 {
 	for (int i = 0; i < num_agents; i++) {
-		agents.push_back(Agent(i, p));
+		agents.push_back(Agent(i, num_agents,  p));
 		throughput.push_back(0);
 	}
 }
@@ -40,6 +40,32 @@ int Channel::run_turn()
 		agent->receive_feedback(feedback);
 	}
 	return feedback;
+}
+
+void Channel::run(int turns)
+{
+	int sender_id;
+	int total_sent;
+
+	vector<Agent>::iterator agent;
+	vector<int>::iterator thru;
+	for(int i = turns; i > 0; i--) {
+		sender_id = 0;
+		total_sent = 0;
+		agent = agents.begin();
+		thru = throughput.begin();
+		for (; agent < agents.end(); agent++) {
+			thru++;
+			if (agent->act() == SEND) {
+				sender_id = agent->get_id();
+				total_sent++;
+				if (total_sent > 1) // Faster with more agents
+					break;
+			}
+		}
+		if (total_sent == 1)
+			throughput[sender_id]++;
+	}
 }
 
 vector<int> Channel::get_throughput()
