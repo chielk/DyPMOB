@@ -60,5 +60,6 @@ int Agent::default_policy()
 
 void Agent::receive_feedback(int feedback)
 {
-	return;
+	if (action == SEND && feedback == COLLISION)
+		msg = true;
 }

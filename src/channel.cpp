@@ -10,42 +10,11 @@ Channel::Channel(int num_agents, float p)
 	}
 }
 
-int Channel::run_turn()
-{
-	int feedback;
-	int sender_id = 0;
-	int total_sent = 0;
-
-	vector<Agent>::iterator agent = agents.begin();
-	vector<int>::iterator thru = throughput.begin();
-	for (; agent < agents.end(); agent++) {
-		thru++;
-		if (agent->act() == SEND) {
-			sender_id = agent->get_id();
-			total_sent++;
-		}
-	}
-	switch (total_sent) {
-		case 0:
-			feedback = EMPTY;
-			break;
-		case 1:
-			feedback = SUCCESS;
-			throughput[sender_id]++;
-			break;
-		default:
-			feedback = COLLISION;
-	}
-	for (agent=agents.begin(); agent < agents.end(); agent++) {
-		agent->receive_feedback(feedback);
-	}
-	return feedback;
-}
-
 void Channel::run(int turns)
 {
 	int sender_id;
 	int total_sent;
+	int feedback = 0;
 
 	vector<Agent>::iterator agent;
 	vector<int>::iterator thru;
@@ -54,17 +23,31 @@ void Channel::run(int turns)
 		total_sent = 0;
 		agent = agents.begin();
 		thru = throughput.begin();
+		// count sending agents
 		for (; agent < agents.end(); agent++) {
 			thru++;
 			if (agent->act() == SEND) {
 				sender_id = agent->get_id();
 				total_sent++;
-				if (total_sent > 1) // Faster with more agents
+				if (total_sent > 1) {
+					feedback = COLLISION;
 					break;
+				}
 			}
 		}
-		if (total_sent == 1)
-			throughput[sender_id]++;
+		// set feedback
+		if (feedback != COLLISION) {
+			if (total_sent == 1) {
+				feedback = SUCCESS;
+				throughput[sender_id]++;
+			} else {
+				feedback = EMPTY;
+			}
+		}
+		// send feedback to agents
+		for (agent=agents.begin(); agent < agents.end(); agent++) {
+			agent->receive_feedback(feedback);
+		}
 	}
 }
 
