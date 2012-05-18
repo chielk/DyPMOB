@@ -10,7 +10,8 @@ Channel::Channel(int num_agents, float p)
 	}
 }
 
-void Channel::run(int turns)
+	void
+Channel::run(int turns)
 {
 	int sender_id;
 	int total_sent;
@@ -51,7 +52,8 @@ void Channel::run(int turns)
 	}
 }
 
-vector<int> Channel::get_throughput()
+	vector<int>
+Channel::get_throughput()
 {
 	return throughput;
 }

@@ -18,19 +18,22 @@ Agent::Agent(int agent_id, int total, float prob)
 	id = agent_id;
 }
 
-int Agent::get_id()
+	int
+Agent::get_id()
 {
 	return id;
 }
 
-bool Agent::refresh()
+	bool
+Agent::refresh()
 {
 	if (!msg)
 		msg = random_b(p);
 	return msg;
 }
 
-int Agent::send()
+	int
+Agent::send()
 {
 	if (!msg)
 		return wait();
@@ -41,7 +44,8 @@ int Agent::send()
 	return action;
 }
 
-int Agent::wait()
+	int
+Agent::wait()
 {
 	action = WAIT;
 	refresh();
@@ -49,7 +53,8 @@ int Agent::wait()
 	return action;
 }
 
-int Agent::default_policy()
+	int
+Agent::default_policy()
 {
 	if (iteration % n == id) {
 		return send();
@@ -58,7 +63,8 @@ int Agent::default_policy()
 	}
 }
 
-void Agent::receive_feedback(int feedback)
+	void
+Agent::receive_feedback(int feedback)
 {
 	if (action == SEND && feedback == COLLISION)
 		msg = true;
