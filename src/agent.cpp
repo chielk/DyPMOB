@@ -32,6 +32,22 @@ Agent::refresh()
 	return msg;
 }
 
+/**
+ * Returns 0 if no message, otherwist 2^id so that they can be xored to make an
+ * integer that represents the complete state.
+ */
+	int
+Agent::has_msg()
+{
+	return (msg? 1 << id: 0);
+}
+
+	int
+Agent::make_send()
+{
+	return send();
+}
+
 	int
 Agent::send()
 {
@@ -42,6 +58,12 @@ Agent::send()
 	refresh();
 	iteration++;
 	return action;
+}
+
+	int
+Agent::make_wait()
+{
+	return wait();
 }
 
 	int

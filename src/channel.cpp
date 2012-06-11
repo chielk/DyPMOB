@@ -4,10 +4,25 @@
 
 Channel::Channel(int num_agents, float p)
 {
-	for (int i = 0; i < num_agents; i++) {
+	for (int i = 0; i < num_agents; ++i) {
 		agents.push_back(Agent(i, num_agents,  p));
 		throughput.push_back(0);
 	}
+}
+
+/**
+ * Uses an int like an array of booleans to represent if agents have a message
+ * to send.
+ */
+	int
+Channel::_state_to_int()
+{
+	vector<Agent>::iterator agent;
+	int state = 0;
+	for (agent = agents.begin(); agent < agents.end(); agent++) {
+		state |= agent->has_msg();
+	}
+	return state;
 }
 
 	void

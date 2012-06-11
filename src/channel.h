@@ -19,6 +19,7 @@ class Channel {
 		int run_turn();
 		void run(int turns);
 		vector<int> get_throughput();
+		int _state_to_int();
 	private:
 		vector<Agent> agents;
 		vector<int> throughput;

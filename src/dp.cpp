@@ -1,6 +1,6 @@
 #include <iostream>
-#include <map>
 #include <set>
+#include <vector>
 #include <algorithm>
 
 #define EE (0)
@@ -10,7 +10,7 @@
 
 
 /**
- * multisets should be of the same length.
+ * vectors should be of the same length.
  *
  *	Return values:
  * Identical:	 0
@@ -20,12 +20,12 @@
  */
 
 	int
-multiset_compare(std::multiset<int> a, std::multiset<int> b)
+vector_compare(std::vector<int> a, std::vector<int> b)
 {
 	int a_count = 0;
 	int b_count = 0;
-	std::multiset<int>::iterator ia;
-	std::multiset<int>::iterator ib;
+	std::vector<int>::iterator ia;
+	std::vector<int>::iterator ib;
 
 	for (ia=a.begin(), ib=b.begin(); ia!=a.end() && ib!=b.end(); ia++, ib++) {
 		if (*ia == *ib) {
@@ -52,59 +52,62 @@ multiset_compare(std::multiset<int> a, std::multiset<int> b)
 class Q
 {
 	public:
-		Q(std::multiset<int> v);
-		void multiset_default(std::multiset<int> v);
-		std::multimap<int, std::multiset<int> >::iterator operator[](const int key);
-		void insert(const int key, const std::multiset<int> value);
-		void add(const int key, std::multiset<int> value);
-	private:
-		std::multimap<int, std::multiset<int> > m;
-		std::multiset<int> default_v;
+		Q(int time, int num_agents, std::vector<int> v);
+		void vector_default(std::vector<int> v);
+		void insert(int time, int state, const std::vector<int> value);
+		std::vector<std::set<std::vector<int> > > operator[](const int key);
+		void add(int time, int state, std::vector<int> value);
 
+	private:
+		std::vector<std::vector<std::set<std::vector<int> > > > v;
+		std::vector<int> default_v;
 };
 
-Q::Q(std::multiset<int> v)
+Q::Q(int time, int num_agents, std::vector<int> v ) :\
+		v(time, std::vector<std::set<std::vector<int> > >(2 << num_agents))
 {
 	default_v = v;
 }
 
+	std::vector<std::set<std::vector<int> > >
+Q::operator[](const int key)
+{
+	return v[key];
+}
+
 	void
-Q::multiset_default(std::multiset<int> v)
+Q::vector_default(std::vector<int> v)
 {
 	default_v = v;
 }
 
 	inline void
-Q::insert(const int key, const std::multiset<int> value)
+Q::insert(int time, int state, const std::vector<int> value)
 {
-	m.insert(std::pair<int, std::multiset<int> >(key, value));
-}
-
-	inline std::multimap<int, std::multiset<int> >::iterator
-Q::operator[](const int key)
-{
-	return m.find(key);
+	v[time][state].insert(value);
 }
 
 	void
-Q::add(const int key, std::multiset<int> value)
+Q::add(int time, int state, std::vector<int> value)
 {
-	std::multimap<int, std::multiset<int> >::iterator it = m.find(key);
+	std::set<std::vector<int> >::iterator it;
+	std::set<std::vector<int> > current = v[time][state];
+
 	bool done = false;
-	for (; it != m.end() && !done; it++) {
-		switch (multiset_compare(value, it->second)) {
-			case 0: // same multiset already in key
+	for (it = current.begin(); it != current.end() && !done; it++) {
+		switch (vector_compare(value, *it)) {
+			case 0: // same vector already in key
 				return;
-			case 1: // new multiset is better; try to remove more before adding
-				m.erase(it);
+			case 1: // new vector is better; try to remove more before adding
+				current.erase(it);
 				break;
-			case -1: // better multiset already in key
+			case -1: // better vector already in key
 				return;
 			case 2: // pareto-equal: add later if not case 0 or 2
 				break;
 		}
 	}
-	insert(key, value); // no multisets were better; add
+	insert(time, state, value); // no vectors were better; add
 	return;
 }
 
@@ -112,44 +115,46 @@ Q::add(const int key, std::multiset<int> value)
 using namespace std;
 int main(int argc, char const *argv[])
 {
-	multiset<int> defval;
-	multiset<int> r1;
-	multiset<int> r2;
-	multiset<int> r3;
-	multiset<int> r4;
-	multiset<int> r5;
+	int time = 10;
+	vector<int> defval;
+	vector<int> r1;
+	vector<int> r2;
+	vector<int> r3;
+	vector<int> r4;
+	vector<int> r5;
 
-	defval.insert(0);
-	defval.insert(0);
+	defval.push_back(0);
+	defval.push_back(0);
 
-	r1.insert(1);
-	r1.insert(1);
+	r1.push_back(1);
+	r1.push_back(1);
 
-	r2.insert(10);
-	r2.insert(2);
+	r2.push_back(10);
+	r2.push_back(2);
 
-	r3.insert(3);
-	r3.insert(3);
-	r3.insert(4);
-	r3.insert(1);
+	r3.push_back(3);
+	r3.push_back(3);
 
-	for (multiset<int>::iterator it = r3.begin(); it!=r3.end(); ++it) {
-		cout << *it << " ";
+	r4.push_back(10);
+	r4.push_back(10);
+
+	Q q = Q(10, 2, defval);
+	q.add(0, EE, r1);
+	q.add(0, EE, r2);
+	q.add(1, EE, r3);
+	q.add(1, EE, r4);
+
+	set<vector<int> >::iterator it;
+	for (int i = 0; i < time; i++) {
+		for (int j = 0; j < 2 << 2; j++) {
+			for (it=q[i][j].begin(); it != q[i][j].end(); it++) {
+				cout << "[";
+				cout << (*it)[0];
+				cout << "]";
+			}
+			cout << "\t";
+		}
+		cout << endl;
 	}
-
-	r4.insert(10);
-	r4.insert(10);
-
-	Q q = Q(defval);
-	q.add(EE, r1);
-	q.add(EE, r2);
-	q.add(EE, r3);
-	q.add(EE, r4);
-
-	for (multiset<int>::iterator it=q[EE]->second.begin(); it!=q[EE]->second.end(); ++it) {
-		cout << *it << " ";
-	}
-	cout << endl;
-
 	return 0;
 }

@@ -8,6 +8,9 @@ inline bool random_b(float p=0.5);
 class Agent {
 	public:
 		Agent(int agent_id, int total, float p);
+		int make_send();
+		int make_wait();
+		int has_msg();
 		int action;	// Last action performed by agent
 		int get_id();
 		void receive_feedback(int feedback);
