@@ -1,7 +1,6 @@
 #include <iostream>
 #include <set>
 #include <vector>
-#include <algorithm>
 
 #define EE (0)
 #define ME (1)
@@ -54,17 +53,17 @@ class Q
 	public:
 		Q(int time, int num_agents, std::vector<int> v);
 		void vector_default(std::vector<int> v);
-		void insert(int time, int state, const std::vector<int> value);
 		std::vector<std::set<std::vector<int> > > operator[](const int key);
 		void add(int time, int state, std::vector<int> value);
 
 	private:
+		void insert(int time, int state, const std::vector<int> value);
 		std::vector<std::vector<std::set<std::vector<int> > > > v;
 		std::vector<int> default_v;
 };
 
 Q::Q(int time, int num_agents, std::vector<int> v ) :\
-		v(time, std::vector<std::set<std::vector<int> > >(2 << num_agents))
+		v(time, std::vector<std::set<std::vector<int> > >(2 << (num_agents-1)))
 {
 	default_v = v;
 }
@@ -84,6 +83,7 @@ Q::vector_default(std::vector<int> v)
 	inline void
 Q::insert(int time, int state, const std::vector<int> value)
 {
+	std::cout << "inserting " << value[0] << ", " << value[1] << std::endl;
 	v[time][state].insert(value);
 }
 
@@ -115,7 +115,7 @@ Q::add(int time, int state, std::vector<int> value)
 using namespace std;
 int main(int argc, char const *argv[])
 {
-	int time = 10;
+	int time = 2;
 	vector<int> defval;
 	vector<int> r1;
 	vector<int> r2;
@@ -127,32 +127,34 @@ int main(int argc, char const *argv[])
 	defval.push_back(0);
 
 	r1.push_back(1);
-	r1.push_back(1);
+	r1.push_back(2);
 
-	r2.push_back(10);
+	r2.push_back(9);
 	r2.push_back(2);
 
 	r3.push_back(3);
-	r3.push_back(3);
+	r3.push_back(5);
 
-	r4.push_back(10);
-	r4.push_back(10);
+	r4.push_back(9);
+	r4.push_back(1);
 
-	Q q = Q(10, 2, defval);
-	q.add(0, EE, r1);
+	Q q = Q(time, 2, defval);
 	q.add(0, EE, r2);
+	q.add(0, EE, r1);
 	q.add(1, EE, r3);
 	q.add(1, EE, r4);
 
 	set<vector<int> >::iterator it;
+	vector<int>::iterator v_it;
 	for (int i = 0; i < time; i++) {
-		for (int j = 0; j < 2 << 2; j++) {
-			for (it=q[i][j].begin(); it != q[i][j].end(); it++) {
-				cout << "[";
+		for (int j = 0; j < 2 << (2-1); j++) {
+			cout << "(t=" << i << ", s=" << j << ")\n\t{\n\t";
+			cout << q[i][j].size() << "!!\n";
+			for (it=q[i][j].begin(); it!=q[i][j].end(); it++) {
 				cout << (*it)[0];
-				cout << "]";
+				cout << ",\n\t";
 			}
-			cout << "\t";
+			cout << "}" << endl;
 		}
 		cout << endl;
 	}
