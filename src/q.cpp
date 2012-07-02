@@ -1,9 +1,25 @@
 #include <iostream>
 #include <set>
 #include <vector>
+#include <cmath>
+#include <algorithm>
+#include <functional>
+
+#define DEBUG_LINE std::cout << __LINE__ << std::endl;
+
+   template <typename T>
+std::vector<T> operator+(const std::vector<T>& a, const std::vector<T>& b)
+{
+   std::vector<T> result;
+   result.reserve(a.size());
+
+   std::transform(a.begin(), a.end(), b.begin(),
+         std::back_inserter(result), std::plus<T>());
+   return result;
+}
 
 
-typedef std::vector<int> V;
+typedef std::vector<int> R; // reward vector
 
 /**
  * Returns all states that can follow given a certain state and action
@@ -13,21 +29,22 @@ typedef std::vector<int> V;
  * action:			0b 000100 (agent 2 sends)
  * least_state:	0b 011001
  *
+ * FIXME: Could be more efficient
  */
 	std::set<int>
-transitions(int action, int state, int max_state)
+get_transitions(int action, int state, int max_state)
 {
 	std::set<int> states;
 	int least_state = state ^ action;
 	int s;
-	for (s = 0; s <= max_state; s++) {
+	for (s = 0; s < max_state; s++) {
 		states.insert(least_state | s);
 	}
 	return states;
 }
 
 	std::set<int>
-actions(int state, int n_agents)
+get_actions(int state, int n_agents)
 {
 	std::set<int> actions;
 	int a = 1;
@@ -37,6 +54,18 @@ actions(int state, int n_agents)
 		a <<= 1;
 	}
 	return actions;
+}
+
+	inline int
+_action2index(int action)
+{
+	return (int) log2(action) - 1;
+}
+
+	inline int
+_index2action(int index)
+{
+	return (index + 1);
 }
 
 /**
@@ -50,12 +79,12 @@ actions(int state, int n_agents)
  */
 
 	int
-vector_compare(V a, V b)
+vector_compare(R a, R b)
 {
 	int a_count = 0;
 	int b_count = 0;
-	V::iterator ia;
-	V::iterator ib;
+	R::iterator ia;
+	R::iterator ib;
 
 	for (ia=a.begin(), ib=b.begin(); ia!=a.end() && ib!=b.end(); ia++, ib++) {
 		if (*ia == *ib) {
@@ -83,50 +112,101 @@ vector_compare(V a, V b)
 class Q
 {
 	public:
-		Q(V default_value);
-		void add(std::vector<int> value);
-		void print_vs();
+		Q(R default_value, int n_agents);
+		void add(int action, R value);
+		void add_all(int action, std::set<R> value);
+		void print();
+		std::set<R> get_V();
+
 
 	private:
-		void insert(V value);
-		std::set<V> Vs;
+		void insert(int action, R value);
+		std::vector<std::set<R> > actions;
+		std::set<R> V;
 };
 
-Q::Q(V default_value)
+Q::Q(R default_value, int n_agents)
 {
-	Vs.insert(default_value);
+	for (int i = 0; i < n_agents; i++) {
+		std::set<R> rewards;
+		rewards.insert(default_value);
+		actions.push_back(rewards);
+	}
+}
+
+	std::set<R>
+Q::get_V()
+{
+	return V;
 }
 
 	void
-Q::print_vs()
+print_set(std::set<R> s, bool t=false)
 {
-	std::set<V>::iterator it;
-	V::const_iterator i_it;
-	for (it = Vs.begin(); it != Vs.end(); it++) {
-		std::cout << "[";
-		for (i_it = it->begin(); i_it != it->end(); i_it++) {
-			std::cout << *i_it << ",";
+	std::set<R>::iterator r;
+	R::const_iterator i_it;
+	for (r = s.begin(); r != s.end(); r++) {
+		if (t)
+			std::cout << "\t[";
+		else
+			std::cout << "[";
+		for (i_it = r->begin(); i_it != r->end(); i_it++) {
+			std::cout << *i_it;
+			if (i_it != r->end()-1)
+				std::cout << ",";
 		}
 		std::cout << "]\n";
 	}
 }
+	void
+Q::print()
+{
+	std::cout << "===========================" << std::endl;
+	std::set<R>::iterator r;
+	R::const_iterator i_it;
+	int action_n = 0;
+	std::cout << "Value: ";
+	print_set(V);
+	std::cout << std::endl;
+
+	std::vector<std::set<R> >::iterator a;
+	for (a = actions.begin(); a != actions.end(); a++) {
+		std::cout << "action " << action_n++ << std::endl; // which action
+		std::cout << "\t{" << std::endl;
+#if 0
+		for (r = a->begin(); r != a->end(); r++) {
+			std::cout << "\t[";
+			for (i_it = r->begin(); i_it != r->end(); i_it++) {
+				std::cout << *i_it;
+				if (i_it != r->end()-1)
+					std::cout << ",";
+			}
+			std::cout << "]\n";
+		}
+#else
+		print_set(*a, true);
+#endif
+		std::cout << "\t}" << std::endl;
+	}
+}
 
 	inline void
-Q::insert(V value)
+Q::insert(int action, R value)
 {
-	Vs.insert(value);
+	actions[_action2index(action)].insert(value);
 }
 
 	void
-Q::add(V value)
+Q::add(int action, R value)
 {
-	std::set<V>::iterator it;
-	for (it = Vs.begin(); it != Vs.end(); ++it) {
+	int a = _action2index(action);
+	std::set<R>::iterator it;
+	for (it = actions[a].begin(); it != actions[a].end(); ++it) {
 		switch (vector_compare(value, *it)) {
 			case 0: // same vector already in key
 				return;
 			case 1: // new vector is better; try to remove more before adding
-				Vs.erase(it);
+				actions[a].erase(it);
 				break;
 			case -1: // better vector already in key
 				return;
@@ -134,30 +214,67 @@ Q::add(V value)
 				break;
 		}
 	}
-	insert(value); // no vectors were better; add
+	actions[a].insert(value); // no vectors were better; add
 	return;
 }
 
+	void
+Q::add_all(int action, std::set<R> values)
+{
+	for (std::set<R>::iterator it = values.begin(); it != values.end(); it++) {
+		R r = *it;
+		r[_action2index(action)] += 1;
+		add(action, r);
+	}
+}
 
 using namespace std;
-int main(int argc, char const *argv[])
+
+	int
+main(int argc, char const *argv[])
 {
 	int time = 2;
 	int n_agents = 2;
 	int n_states = 2 << (n_agents - 1);
 
-	V defval;
-	for (int i = 0; i < n_agents; i++)
-		defval.push_back(0);
+	R defval = R(n_agents, 0);
 
-	vector<vector<Q> > q(time, vector<Q>(n_states, Q(defval)));
-
+	cout << "creating states... ";
 	int t, s;
+	vector<vector<Q> > q(time, vector<Q>(n_states, Q(defval, n_agents)));
+	cout << "done" << endl;
+
 	for (t = 0; t < time; t++) {
-		for (s = 0; t < n_states; s++) {
-			q[t][s] = 
+		for (s = 0; s < n_states; s++) {
+			set<int> actions = get_actions(s, n_agents);
+			set<int>::iterator a_it;
+			for (a_it = actions.begin(); a_it != actions.end(); a_it++) {
+				set<R> rewards;
+				set<int> transitions = get_transitions(*a_it, s, n_states);
+				set<int>::iterator tr_it;
+				for (tr_it = transitions.begin(); tr_it != transitions.end(); tr_it++) {
+					if (t > 0) {
+						q[s][t].add_all(*a_it, q[t-1][*tr_it].get_V());
+					} else {
+						/*
+						R r = R(n_agents, 0);
+						DEBUG_LINE
+						r[_action2index(*a_it)] = 1;
+						DEBUG_LINE
+						//q[s][t].add(*a_it, r);
+						*/
+					}
+				}
+				//q[t][s].add(a_it, transitions);
+				//cout << endl;
+			}
 		}
 	}
 
+	for (t = 0; t < time; t++) {
+		for (s = 0; s < n_states; s++) {
+			q[s][t].print();
+		}
+	}
 	return 0;
 }
