@@ -4,8 +4,9 @@
 #include <cmath>
 #include <algorithm>
 #include <functional>
+#include <unistd.h>
 
-#define DEBUG_LINE std::cout << __LINE__ << std::endl;
+#define DEBUG_LINE std::cout << __LINE__ << std::endl << std::flush
 
    template <typename T>
 std::vector<T> operator+(const std::vector<T>& a, const std::vector<T>& b)
@@ -59,13 +60,13 @@ get_actions(int state, int n_agents)
 	inline int
 _action2index(int action)
 {
-	return (int) log2(action) - 1;
+	return (int) log2(action);
 }
 
 	inline int
 _index2action(int index)
 {
-	return (index + 1);
+	return 1 << index;
 }
 
 /**
@@ -120,6 +121,7 @@ class Q
 
 
 	private:
+		void add_V(R value);
 		void insert(int action, R value);
 		std::vector<std::set<R> > actions;
 		std::set<R> V;
@@ -158,6 +160,7 @@ print_set(std::set<R> s, bool t=false)
 		std::cout << "]\n";
 	}
 }
+
 	void
 Q::print()
 {
@@ -173,19 +176,7 @@ Q::print()
 	for (a = actions.begin(); a != actions.end(); a++) {
 		std::cout << "action " << action_n++ << std::endl; // which action
 		std::cout << "\t{" << std::endl;
-#if 0
-		for (r = a->begin(); r != a->end(); r++) {
-			std::cout << "\t[";
-			for (i_it = r->begin(); i_it != r->end(); i_it++) {
-				std::cout << *i_it;
-				if (i_it != r->end()-1)
-					std::cout << ",";
-			}
-			std::cout << "]\n";
-		}
-#else
 		print_set(*a, true);
-#endif
 		std::cout << "\t}" << std::endl;
 	}
 }
@@ -196,12 +187,13 @@ Q::insert(int action, R value)
 	actions[_action2index(action)].insert(value);
 }
 
+// TODO: also add to V
 	void
 Q::add(int action, R value)
 {
 	int a = _action2index(action);
 	std::set<R>::iterator it;
-	for (it = actions[a].begin(); it != actions[a].end(); ++it) {
+	for (it = actions[a].begin(); it != actions[a].end(); it++) {
 		switch (vector_compare(value, *it)) {
 			case 0: // same vector already in key
 				return;
@@ -215,9 +207,31 @@ Q::add(int action, R value)
 		}
 	}
 	actions[a].insert(value); // no vectors were better; add
+	add_V(value);
 	return;
 }
 
+	void
+Q::add_V(R value)
+{
+	std::set<R>::iterator it;
+	for (it = V.begin(); it != V.end(); it++) {
+		switch (vector_compare(value, *it)) {
+			case 0: // same vector already in key
+				return;
+			case 1: // new vector is better; try to remove more before adding
+				V.erase(it);
+				break;
+			case -1: // better vector already in key
+				return;
+			case 2: // pareto-equal: add later if not case 0 or 2
+				break;
+		}
+	}
+	V.insert(value); // no vectors were better; add
+	// TODO: Add to V here?
+	return;
+}
 	void
 Q::add_all(int action, std::set<R> values)
 {
@@ -231,10 +245,57 @@ Q::add_all(int action, std::set<R> values)
 using namespace std;
 
 	int
-main(int argc, char const *argv[])
+main(int argc, char **argv)
 {
-	int time = 2;
+	//====================================
+	bool quiet=false;
+	bool seedflg = false;
+	int seed = 0;
+	int time = 5;
 	int n_agents = 2;
+	float p_msg = 0.5;
+
+	// Get command-line options
+	char c;
+	int errflg = 0;
+	while ((c = getopt(argc, argv, ":qs:r:n:p:")) != -1) {
+		switch (c) {
+			case 'p':
+				p_msg = atof(optarg);
+				if (p_msg > 1.0 || p_msg < 0.0) {
+					cerr << "Error: p should be between 0 and 1" << endl;
+					errflg++;
+				}
+				break;
+			case 'n':
+				n_agents = atoi(optarg);
+				break;
+			case 'r':
+				time = atoi(optarg);
+				break;
+			case 's':
+				seed = atoi(optarg);
+				seedflg = true;
+				break;
+			case 'q':
+				quiet = true;
+				break;
+			case ':':       /* -s, -n, -p or -r without operand */
+				cerr << "Option -" << char(optopt) << " requires an operand" << endl;
+				errflg++;
+				break;
+			case '?':
+				cerr << "Unrecognised option: -" << char(optopt) << endl;
+				errflg++;
+		}
+	}
+	if (errflg) {
+		cout << "Usage: " << argv[0] << \
+			" [-q] [-s <seed>] [-r <repeat>] [-n <agents>] [-p <P>]" << endl;
+		exit(2);
+	}
+	//====================================
+
 	int n_states = 2 << (n_agents - 1);
 
 	R defval = R(n_agents, 0);
@@ -254,27 +315,26 @@ main(int argc, char const *argv[])
 				set<int>::iterator tr_it;
 				for (tr_it = transitions.begin(); tr_it != transitions.end(); tr_it++) {
 					if (t > 0) {
-						q[s][t].add_all(*a_it, q[t-1][*tr_it].get_V());
+						q[t][s].add_all(*a_it, q[t-1][*tr_it].get_V());
 					} else {
-						/*
 						R r = R(n_agents, 0);
-						DEBUG_LINE
 						r[_action2index(*a_it)] = 1;
-						DEBUG_LINE
-						//q[s][t].add(*a_it, r);
-						*/
+						q[t][s].add(*a_it, r);
 					}
 				}
-				//q[t][s].add(a_it, transitions);
-				//cout << endl;
 			}
 		}
 	}
 
-	for (t = 0; t < time; t++) {
-		for (s = 0; s < n_states; s++) {
-			q[s][t].print();
+
+	if (!quiet) {
+		for (t = 0; t < time; t++) {
+			for (s = 0; s < n_states; s++) {
+				cout << "(" << t << ", " << s << ")" << endl;
+				q[t][s].print();
+			}
 		}
 	}
+	cout << "Pareto front size: " << q[t-1][s-1].get_V().size() << endl;
 	return 0;
 }
