@@ -20,7 +20,34 @@ std::vector<T> operator+(const std::vector<T>& a, const std::vector<T>& b)
 }
 
 
-typedef std::vector<int> R; // reward vector
+typedef std::vector<float> R; // reward vector
+
+/**
+ * "int state" is *after* action. i.e.
+ * old_state:	0b 111
+ * action:		0b 100
+ * state:		0b 011
+ */
+	float
+get_trans_p(int trans, int state, std::vector<float> pv){
+	int diff = trans ^ state;
+
+	float p_total = 1.0;
+	int mask = 1;
+	// Iterate in reverse because the mask starts at 0b0*001
+	std::vector<float>::reverse_iterator p;
+	for (p = pv.rbegin(); p != pv.rend(); p++) {
+		if (mask & diff) {
+			if (mask & state) {
+				p_total *= 1.0 - *p;
+			} else {
+				p_total *= *p;
+			}
+		}
+		mask <<= 1;
+	}
+	return p_total;
+}
 
 /**
  * Returns all states that can follow given a certain state and action
@@ -30,16 +57,17 @@ typedef std::vector<int> R; // reward vector
  * action:			0b 000100 (agent 2 sends)
  * least_state:	0b 011001
  *
- * FIXME: Could be more efficient
  */
-	std::set<int>
-get_transitions(int action, int state, int max_state)
+	std::set<std::pair<int, float> >
+get_transitions(int action, int state, int max_state, std::vector<float> pv)
 {
-	std::set<int> states;
+	std::set<std::pair<int, float> > states;
 	int least_state = state ^ action;
 	int s;
 	for (s = 0; s < max_state; s++) {
-		states.insert(least_state | s);
+		int new_state = least_state | s;
+		states.insert(std::pair<int, float>(new_state,\
+					get_trans_p(new_state, least_state, pv)));
 	}
 	return states;
 }
@@ -48,6 +76,7 @@ get_transitions(int action, int state, int max_state)
 get_actions(int state, int n_agents)
 {
 	std::set<int> actions;
+	actions.insert(0); // Doing nothing is always possible
 	int a = 1;
 	for (int n = 1; n <= n_agents; n++) {
 		if (a & state)
@@ -115,7 +144,7 @@ class Q
 	public:
 		Q(R default_value, int n_agents);
 		void add(int action, R value);
-		void add_all(int action, std::set<R> value);
+		void add_all(int action, std::set<R> value, float p);
 		void print();
 		std::set<R> get_V();
 
@@ -174,7 +203,7 @@ Q::print()
 
 	std::vector<std::set<R> >::iterator a;
 	for (a = actions.begin(); a != actions.end(); a++) {
-		std::cout << "action " << action_n++ << std::endl; // which action
+		std::cout << "action " << _index2action(action_n++) << std::endl; // which action
 		std::cout << "\t{" << std::endl;
 		print_set(*a, true);
 		std::cout << "\t}" << std::endl;
@@ -187,26 +216,28 @@ Q::insert(int action, R value)
 	actions[_action2index(action)].insert(value);
 }
 
-// TODO: also add to V
 	void
 Q::add(int action, R value)
 {
-	int a = _action2index(action);
-	std::set<R>::iterator it;
-	for (it = actions[a].begin(); it != actions[a].end(); it++) {
-		switch (vector_compare(value, *it)) {
-			case 0: // same vector already in key
-				return;
-			case 1: // new vector is better; try to remove more before adding
-				actions[a].erase(it);
-				break;
-			case -1: // better vector already in key
-				return;
-			case 2: // pareto-equal: add later if not case 0 or 2
-				break;
+	//std::cout << "add:\taction=" << action << std::endl;
+	if (action) {
+		int a = _action2index(action);
+		std::set<R>::iterator it;
+		for (it = actions[a].begin(); it != actions[a].end(); it++) {
+			switch (vector_compare(value, *it)) {
+				case 0: // same vector already in key
+					return;
+				case 1: // new vector is better; try to remove more before adding
+					actions[a].erase(it);
+					break;
+				case -1: // better vector already in key
+					return;
+				case 2: // pareto-equal: add later if not case 0 or 2
+					break;
+			}
 		}
+		actions[a].insert(value); // no vectors were better; add
 	}
-	actions[a].insert(value); // no vectors were better; add
 	add_V(value);
 	return;
 }
@@ -229,15 +260,21 @@ Q::add_V(R value)
 		}
 	}
 	V.insert(value); // no vectors were better; add
-	// TODO: Add to V here?
 	return;
 }
 	void
-Q::add_all(int action, std::set<R> values)
+Q::add_all(int action, std::set<R> values, float p)
 {
 	for (std::set<R>::iterator it = values.begin(); it != values.end(); it++) {
 		R r = *it;
-		r[_action2index(action)] += 1;
+		// Multiply with probability
+		for (int i = 0; i < r.size(); i++) {
+			r[i] *= p;
+		}
+		// Add direct reward
+		if (action) {
+			r[_action2index(action)] += 1.0;
+		}
 		add(action, r);
 	}
 }
@@ -253,20 +290,13 @@ main(int argc, char **argv)
 	int seed = 0;
 	int time = 5;
 	int n_agents = 2;
-	float p_msg = 0.5;
+	vector<float> p_msg;
 
 	// Get command-line options
 	char c;
 	int errflg = 0;
-	while ((c = getopt(argc, argv, ":qs:r:n:p:")) != -1) {
+	while ((c = getopt(argc, argv, ":qs:r:n:")) != -1) {
 		switch (c) {
-			case 'p':
-				p_msg = atof(optarg);
-				if (p_msg > 1.0 || p_msg < 0.0) {
-					cerr << "Error: p should be between 0 and 1" << endl;
-					errflg++;
-				}
-				break;
 			case 'n':
 				n_agents = atoi(optarg);
 				break;
@@ -289,9 +319,20 @@ main(int argc, char **argv)
 				errflg++;
 		}
 	}
+	int index;
+	for (index = optind; index < argc; index++) {
+		float p = atof(argv[index]);
+		if (p >= 0.0 && p <= 1.0) {
+			p_msg.push_back(p);
+			cout << "pushing " << p << endl;
+		} else {
+			cerr << "Probabilities should be between 0 and 1." << endl;
+			exit(2);
+		}
+	}
 	if (errflg) {
 		cout << "Usage: " << argv[0] << \
-			" [-q] [-s <seed>] [-r <repeat>] [-n <agents>] [-p <P>]" << endl;
+			" [-q] [-s <seed>] [-r <repeat>] [-n <agents>] [<P> <P> ...]" << endl;
 		exit(2);
 	}
 	//====================================
@@ -306,25 +347,30 @@ main(int argc, char **argv)
 	cout << "done" << endl;
 
 	for (t = 0; t < time; t++) {
+		cout << "\r\033[K" << flush;
+		cout << (100*t)/time << "%" << flush;
 		for (s = 0; s < n_states; s++) {
 			set<int> actions = get_actions(s, n_agents);
 			set<int>::iterator a_it;
 			for (a_it = actions.begin(); a_it != actions.end(); a_it++) {
 				set<R> rewards;
-				set<int> transitions = get_transitions(*a_it, s, n_states);
-				set<int>::iterator tr_it;
+				set<pair<int, float> > transitions = get_transitions(*a_it, s, n_states, p_msg);
+				set<pair<int, float> >::iterator tr_it;
 				for (tr_it = transitions.begin(); tr_it != transitions.end(); tr_it++) {
 					if (t > 0) {
-						q[t][s].add_all(*a_it, q[t-1][*tr_it].get_V());
+						q[t][s].add_all(*a_it, q[t-1][tr_it->first].get_V(), tr_it->second);
 					} else {
 						R r = R(n_agents, 0);
-						r[_action2index(*a_it)] = 1;
+						if (*a_it) {
+							r[_action2index(*a_it)] = 1;
+						}
 						q[t][s].add(*a_it, r);
 					}
 				}
 			}
 		}
 	}
+	cout << "\r\033[K" << flush;
 
 
 	if (!quiet) {
