@@ -76,7 +76,6 @@ get_transitions(int action, int state, int max_state, std::vector<float> pv)
 get_actions(int state, int n_agents)
 {
 	std::set<int> actions;
-	actions.insert(0); // Doing nothing is always possible
 	int a = 1;
 	for (int n = 1; n <= n_agents; n++) {
 		if (a & state)
@@ -89,17 +88,13 @@ get_actions(int state, int n_agents)
 	inline int
 _action2index(int action)
 {
-	if (!action)
-		return 0;
-	return (int) log2(action)+1;
+	return (int) log2(action);
 }
 
 	inline int
 _index2action(int index)
 {
-	if (!index)
-		return 0;
-	return 1 << (index-1);
+	return 1 << index;
 }
 
 /**
@@ -152,6 +147,7 @@ class Q
 		void print(int t, int s);
 		std::set<R> get_V();
 
+
 	private:
 		void add_V(R value);
 		std::vector<std::set<R> > actions;
@@ -160,7 +156,7 @@ class Q
 
 Q::Q(R default_value, int n_agents)
 {
-	for (int i = 0; i < n_agents+1; i++) {
+	for (int i = 0; i < n_agents; i++) {
 		std::set<R> rewards;
 		rewards.insert(default_value);
 		actions.push_back(rewards);
@@ -266,9 +262,7 @@ Q::add_all(int action, std::set<R> values, float p)
 			r[i] *= p;
 		}
 		// Add direct reward
-		if (action) {
-			r[_action2index(action)] += 1.0;
-		}
+		r[_action2index(action)] += 1.0;
 		add(action, r);
 	}
 }
@@ -351,13 +345,10 @@ main(int argc, char **argv)
 				set<pair<int, float> >::iterator tr_it;
 				for (tr_it = transitions.begin(); tr_it != transitions.end(); tr_it++) {
 					if (t > 0) {
-						DEBUG_LINE;
 						q[t][s].add_all(*a_it, q[t-1][tr_it->first].get_V(), tr_it->second);
 					} else {
 						R r = R(n_agents, 0.0);
-						if (*a_it) {
-							r[_action2index(*a_it)] = 1.0;
-						}
+						r[_action2index(*a_it)] = 1.0;
 						q[t][s].add(*a_it, r);
 					}
 				}
