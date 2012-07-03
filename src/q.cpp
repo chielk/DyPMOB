@@ -267,7 +267,7 @@ Q::add_all(int action, std::set<R> values, float p)
 		}
 		// Add direct reward
 		if (action) {
-			r[_action2index(action)] += 1.0;
+			r[_action2index(action)-1] += 1.0;
 		}
 		add(action, r);
 	}
@@ -351,12 +351,11 @@ main(int argc, char **argv)
 				set<pair<int, float> >::iterator tr_it;
 				for (tr_it = transitions.begin(); tr_it != transitions.end(); tr_it++) {
 					if (t > 0) {
-						DEBUG_LINE;
 						q[t][s].add_all(*a_it, q[t-1][tr_it->first].get_V(), tr_it->second);
 					} else {
 						R r = R(n_agents, 0.0);
 						if (*a_it) {
-							r[_action2index(*a_it)] = 1.0;
+							r[_action2index(*a_it)-1] = 1.0;
 						}
 						q[t][s].add(*a_it, r);
 					}
