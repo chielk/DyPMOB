@@ -5,8 +5,13 @@
 #include <algorithm>
 #include <functional>
 #include <unistd.h>
+#include <limits>
 
 #define DEBUG_LINE std::cout << __LINE__ << std::endl << std::flush
+
+int same = 0;
+int removed_a = 0;
+int removed_v = 0;
 
    template <typename T>
 std::vector<T> operator+(const std::vector<T>& a, const std::vector<T>& b)
@@ -30,15 +35,13 @@ typedef std::vector<float> R; // reward vector
  */
 	float
 get_trans_p(int trans, int state, std::vector<float> pv){
-	int diff = trans ^ state;
-
 	float p_total = 1.0;
 	int mask = 1;
 	// Iterate in reverse because the mask starts at 0b0*001
 	std::vector<float>::reverse_iterator p;
 	for (p = pv.rbegin(); p != pv.rend(); p++) {
-		if (mask & diff) {
-			if (mask & state) {
+		if (!(mask & state)) {
+			if (mask & trans) {
 				p_total *= 1.0 - *p;
 			} else {
 				p_total *= *p;
@@ -59,13 +62,18 @@ get_trans_p(int trans, int state, std::vector<float> pv){
  *
  */
 	std::set<std::pair<int, float> >
-get_transitions(int action, int state, int max_state, std::vector<float> pv)
+get_transitions(int action, int state, int n_states, std::vector<float> pv)
 {
+	// TODO cache a,s -> return value
 	std::set<std::pair<int, float> > states;
 	int least_state = state ^ action;
 	int s;
-	for (s = 0; s < max_state; s++) {
+	for (s = 0; s < n_states; s++) {
 		int new_state = least_state | s;
+#if 0
+		std::cout << "p(" << least_state << "->" << new_state << ") = "\
+			<< get_trans_p(new_state, least_state, pv) << std::endl;
+#endif
 		states.insert(std::pair<int, float>(new_state,\
 					get_trans_p(new_state, least_state, pv)));
 	}
@@ -121,7 +129,8 @@ vector_compare(R a, R b)
 	R::iterator ib;
 
 	for (ia=a.begin(), ib=b.begin(); ia!=a.end() && ib!=b.end(); ia++, ib++) {
-		if (*ia == *ib) {
+		//if (std::fabs(*ia - *ib) < std::numeric_limits<double>::epsilon()) {
+		if (std::fabs(*ia - *ib) < 0.000001) {
 			continue;
 		}
 		if (*ia > *ib) {
@@ -135,7 +144,7 @@ vector_compare(R a, R b)
 		}
 	}
 
-	if (a_count)
+	if  (a_count)
 		 return 1;			// x - 0
 	if (b_count)
 		return -1;			// 0 - x
@@ -165,6 +174,7 @@ Q::Q(R default_value, int n_agents)
 		rewards.insert(default_value);
 		actions.push_back(rewards);
 	}
+	V.insert(default_value);
 }
 
 	std::set<R>
@@ -213,6 +223,50 @@ Q::print(int t, int s)
 	}
 }
 
+/**
+ * Adds sets of vectors
+ * {a} + {b} + {c, d} = {a+b+c, a+b+d}
+ * {a, b} + {c, d} = {a+c, a+d, b+c, b+d}
+ */
+	std::set<R>
+add_sets(std::vector<std::set<R> > all) {
+#if 0
+	std::vector<std::set<R> >::iterator pt = all.begin();
+	std::cout << "in:\n";
+	for (; pt != all.end(); pt++) {
+		print_set(*pt);
+		std::cout << std::endl;
+	}
+	std::cout << "-\n";
+#endif
+
+	std::set<R> result;
+	std::vector<std::set<R> >::iterator at = all.begin();
+	std::set<R>::iterator bt;
+	std::set<R>::iterator vt;
+	std::set<R> tmp;
+	result = std::set<R>(*at);
+	for (++at; at != all.end(); at++) {
+		tmp.clear();
+		// deep copy
+		for (bt=result.begin(); bt != result.end(); bt++) {
+			tmp.insert(R(*bt));
+		}
+		result.clear();
+		for (vt=at->begin(); vt!= at->end(); vt++) {
+			for (bt=tmp.begin(); bt != tmp.end(); bt++) {
+				result.insert(*vt+*bt);
+			}
+		}
+	}
+#if 0
+	std::cout << "out:\n";
+	print_set(result);
+	std::cout << "====\n";
+#endif
+	return result;
+}
+
 	void
 Q::add(int action, R value)
 {
@@ -221,11 +275,17 @@ Q::add(int action, R value)
 	for (it = actions[i].begin(); it != actions[i].end(); it++) {
 		switch (vector_compare(value, *it)) {
 			case 0: // same vector already in key
+				//std::cout << (*it)[0] << ", " << (*it)[1] << "\tsame" << std::endl;
+				same++;
 				return;
 			case 1: // new vector is better; try to remove more before adding
+				//std::cout << (*it)[0] << ", " << (*it)[1] << std::endl;
 				actions[i].erase(it);
 				break;
 			case -1: // better vector already in key
+				//std::cout << value[0] << ", " << value[1] << std::endl;
+				if (!(value[0] < 0.000001 && value[1] < 0.000001))
+					removed_a++;
 				return;
 			case 2: // pareto-equal: add later if not case 0 or 2
 				break;
@@ -243,11 +303,16 @@ Q::add_V(R value)
 	for (it = V.begin(); it != V.end(); it++) {
 		switch (vector_compare(value, *it)) {
 			case 0: // same vector already in key
+				same++;
 				return;
 			case 1: // new vector is better; try to remove more before adding
+				if (!((*it)[0] < 0.000001 && (*it)[1] < 0.000001))
+					removed_v++;
 				V.erase(it);
 				break;
 			case -1: // better vector already in key
+				if (!(value[0] < 0.000001 && value[1] < 0.000001))
+					removed_v++;
 				return;
 			case 2: // pareto-equal: add later if not case 0 or 2
 				break;
@@ -256,22 +321,21 @@ Q::add_V(R value)
 	V.insert(value); // no vectors were better; add
 	return;
 }
-	void
-Q::add_all(int action, std::set<R> values, float p)
+
+	std::set<R>
+multiply_all(std::set<R> values, float p)
 {
+	std::set<R> result;
 	for (std::set<R>::iterator it = values.begin(); it != values.end(); it++) {
-		R r = *it;
-		// Multiply with probability
+		R r = R(*it);
 		for (int i = 0; i < r.size(); i++) {
 			r[i] *= p;
 		}
-		// Add direct reward
-		if (action) {
-			r[_action2index(action)-1] += 1.0;
-		}
-		add(action, r);
+		result.insert(r);
 	}
+	return result;
 }
+
 
 using namespace std;
 
@@ -340,31 +404,48 @@ main(int argc, char **argv)
 	cout << "done" << endl;
 
 	for (t = 0; t < time; t++) {
-		cout << "\r\033[K" << flush;
+		//cout << "\r\033[K" << flush;
 		//cout << (100*t)/time << "%" << flush;
+		cout << endl;
 		for (s = 0; s < n_states; s++) {
 			set<int> actions = get_actions(s, n_agents);
 			set<int>::iterator a_it;
 			for (a_it = actions.begin(); a_it != actions.end(); a_it++) {
-				set<R> rewards;
+				vector<set<R> > rewards;
 				set<pair<int, float> > transitions = get_transitions(*a_it, s, n_states, p_msg);
 				set<pair<int, float> >::iterator tr_it;
-				for (tr_it = transitions.begin(); tr_it != transitions.end(); tr_it++) {
-					if (t > 0) {
-						q[t][s].add_all(*a_it, q[t-1][tr_it->first].get_V(), tr_it->second);
-					} else {
-						R r = R(n_agents, 0.0);
+				same = 0;
+				removed_a = 0;
+				removed_v = 0;
+				if (t > 0) {
+
+					// calculate vector of sets p(s')*V(s')
+					for (tr_it = transitions.begin(); tr_it != transitions.end(); tr_it++) {
+						rewards.push_back(multiply_all(q[t-1][tr_it->first].get_V(), tr_it->second));
+					}
+					// each possible sum of rewards
+					set<R> new_rewards = add_sets(rewards);
+					set<R>::iterator rr;
+					for (rr = new_rewards.begin(); rr != new_rewards.end(); rr++) {
+						R r = R(*rr);
+						// direct reward
 						if (*a_it) {
-							r[_action2index(*a_it)-1] = 1.0;
+							r[_action2index(*a_it)-1] += 1.0;
 						}
 						q[t][s].add(*a_it, r);
 					}
+				} else {
+					if (*a_it) {
+						R r = R(n_agents, 0.0);
+						r[_action2index(*a_it)-1] = 1.0;
+						q[t][s].add(*a_it, r);
+					}
 				}
+				cout << "s,a=" << s << "," << *a_it << "\tsame: " << same << "\tremoved (a,v,t): " << removed_a << ", " << removed_v << ", " << removed_a+removed_v << endl;
 			}
 		}
 	}
 	cout << "\r\033[K" << flush;
-
 
 	if (!quiet) {
 		for (t = 0; t < time; t++) {
@@ -373,6 +454,10 @@ main(int argc, char **argv)
 			}
 		}
 	}
-	cout << "Pareto front size: " << q[t-1][s-1].get_V().size() << endl;
+	cout << "Pareto front size: ";
+	for (s = 0; s < n_states-1; s++) {
+		cout << q[t-1][s].get_V().size() << ", ";
+	}
+	cout << q[t-1][s].get_V().size() << endl;
 	return 0;
 }
