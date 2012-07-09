@@ -1,0 +1,1 @@
+plot "s0a0.dat" u 1:2 w p linecolor 0

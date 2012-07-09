@@ -1,0 +1,1 @@
+plot "s3a0.dat" u 1:2 w p linecolor 0, "s3a1.dat" u 1:2 w p linecolor 1, "s3a2.dat" u 1:2 w p linecolor 2;
