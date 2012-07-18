@@ -7,6 +7,8 @@
 \usepackage[round]{natbib}
 \usepackage{multicol}
 \usepackage{caption}
+\usepackage{subcaption}
+\usepackage{geometry}
 \def\keywords{\vspace{.5em}
 	{\textbf{Keywords}:\,\relax
 }}
@@ -240,6 +242,55 @@
 		\label{tab:turns}
 	\end{table}
 
+	\newgeometry{textwidth=\paperwidth,layouthoffset=.75cm}
+	\begin{figure}
+		\begin{subfigure}[b]{0.3\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{images/t2s0}
+			\caption{s=(e,e)}
+			\label{fig:t2s0}
+		\end{subfigure}
+		~
+		\begin{subfigure}[b]{0.3\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{images/t2s1}
+			\caption{s=(m,e)}
+			\label{fig:t2s1}
+		\end{subfigure}
+		~
+		\begin{subfigure}[b]{0.3\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{images/t2s3}
+			\caption{s=(m,m)}
+			\label{fig:t2s3}
+		\end{subfigure}
+		\caption{Time step 2}
+	\end{figure}
+
+	\begin{figure}
+		\begin{subfigure}[b]{0.3\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{images/t3s0}
+			\caption{s=(e,e)}
+			\label{fig:t3s0}
+		\end{subfigure}
+		~
+		\begin{subfigure}[b]{0.3\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{images/t3s1}
+			\caption{s=(m,e)}
+			\label{fig:t3s1}
+		\end{subfigure}
+		~
+		\begin{subfigure}[b]{0.3\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{images/t3s3}
+			\caption{s=(m,m)}
+			\label{fig:t3s3}
+		\end{subfigure}
+		\caption{Time step 3}
+	\end{figure}
+	\restoregeometry
 	% section results (end)
 	\pagebreak
 

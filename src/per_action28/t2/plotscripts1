@@ -1,1 +1,8 @@
+set nokey
+set size ratio -1
+set xrange[0:3]
+set yrange[0:3]
 plot "s1a0.dat" u 1:2 w p linecolor 0, "s1a1.dat" u 1:2 w p linecolor 1
+set term postscript
+set output "t2s1.ps"
+replot

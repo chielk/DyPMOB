@@ -64,19 +64,21 @@ get_trans_p(int trans, int state, std::vector<float> pv){
 	std::set<std::pair<int, float> >
 get_transitions(int action, int state, int n_states, std::vector<float> pv)
 {
-	// TODO cache a,s -> return value
+	static std::vector<std::set<std::pair<int, float> > > cache = \
+		std::vector<std::set<std::pair<int, float> > >(n_states);
+
 	std::set<std::pair<int, float> > states;
 	int least_state = state ^ action;
 	int s;
+	if (!cache[least_state].empty()) {
+		return cache[least_state];
+	}
 	for (s = 0; s < n_states; s++) {
 		int new_state = least_state | s;
-#if 0
-		std::cout << "p(" << least_state << "->" << new_state << ") = "\
-			<< get_trans_p(new_state, least_state, pv) << std::endl;
-#endif
 		states.insert(std::pair<int, float>(new_state,\
 					get_trans_p(new_state, least_state, pv)));
 	}
+	cache[least_state] = states;
 	return states;
 }
 
@@ -130,7 +132,7 @@ vector_compare(R a, R b)
 
 	for (ia=a.begin(), ib=b.begin(); ia!=a.end() && ib!=b.end(); ia++, ib++) {
 		//if (std::fabs(*ia - *ib) < std::numeric_limits<double>::epsilon()) {
-		if (std::fabs(*ia - *ib) < 0.000001) {
+		if (std::fabs(*ia - *ib) < 0.0000001) {
 			continue;
 		}
 		if (*ia > *ib) {
@@ -230,16 +232,6 @@ Q::print(int t, int s)
  */
 	std::set<R>
 add_sets(std::vector<std::set<R> > all) {
-#if 0
-	std::vector<std::set<R> >::iterator pt = all.begin();
-	std::cout << "in:\n";
-	for (; pt != all.end(); pt++) {
-		print_set(*pt);
-		std::cout << std::endl;
-	}
-	std::cout << "-\n";
-#endif
-
 	std::set<R> result;
 	std::vector<std::set<R> >::iterator at = all.begin();
 	std::set<R>::iterator bt;
@@ -259,20 +251,20 @@ add_sets(std::vector<std::set<R> > all) {
 			}
 		}
 	}
-#if 0
-	std::cout << "out:\n";
-	print_set(result);
-	std::cout << "====\n";
-#endif
 	return result;
 }
 
 	void
 Q::add(int action, R value)
 {
+	R cmp = R(value);
+	cmp[1] = 99999999999;
+	bool null_vec = (value[0] < 0.0000001 && value[1] < 0.0000001);
 	int i = _action2index(action);
+	print_set(actions[i]);
 	std::set<R>::iterator it;
-	for (it = actions[i].begin(); it != actions[i].end(); it++) {
+	for (it = actions[i].begin(); it != actions[i].lower_bound(cmp); it++) {
+		std::cout << "loop...\n";
 		switch (vector_compare(value, *it)) {
 			case 0: // same vector already in key
 				//std::cout << (*it)[0] << ", " << (*it)[1] << "\tsame" << std::endl;
@@ -280,38 +272,44 @@ Q::add(int action, R value)
 				return;
 			case 1: // new vector is better; try to remove more before adding
 				//std::cout << (*it)[0] << ", " << (*it)[1] << std::endl;
+				std::cout << "erase...\n";
 				actions[i].erase(it);
+				std::cout << "done erase...\n";
 				break;
 			case -1: // better vector already in key
 				//std::cout << value[0] << ", " << value[1] << std::endl;
-				if (!(value[0] < 0.000001 && value[1] < 0.000001))
+				if (!null_vec);
 					removed_a++;
 				return;
 			case 2: // pareto-equal: add later if not case 0 or 2
 				break;
 		}
 	}
+	std::cout << "insert...\n";
 	actions[i].insert(value); // no vectors were better; add
+	std::cout << "done insert...\n";
 	add_V(value);
+	std::cout << "done add_V...\n";
 	return;
 }
 
 	void
 Q::add_V(R value)
 {
-	std::set<R>::iterator it;
+	bool null_vec = (value[0] < 0.0000001 && value[1] < 0.0000001);
+	static std::set<R>::iterator it;
 	for (it = V.begin(); it != V.end(); it++) {
 		switch (vector_compare(value, *it)) {
 			case 0: // same vector already in key
 				same++;
 				return;
 			case 1: // new vector is better; try to remove more before adding
-				if (!((*it)[0] < 0.000001 && (*it)[1] < 0.000001))
+				if (!null_vec)
 					removed_v++;
 				V.erase(it);
 				break;
 			case -1: // better vector already in key
-				if (!(value[0] < 0.000001 && value[1] < 0.000001))
+				if (!null_vec)
 					removed_v++;
 				return;
 			case 2: // pareto-equal: add later if not case 0 or 2
