@@ -1,0 +1,38 @@
+creating states... done
+
+s,a=0,0	same: 0	removed (a,v,t): 0, 0, 0
+s,a=1,0	same: 0	removed (a,v,t): 0, 0, 0
+s,a=1,1	same: 0	removed (a,v,t): 0, 1, 1
+s,a=2,0	same: 0	removed (a,v,t): 0, 0, 0
+s,a=2,2	same: 0	removed (a,v,t): 0, 1, 1
+s,a=3,0	same: 0	removed (a,v,t): 0, 0, 0
+s,a=3,1	same: 0	removed (a,v,t): 0, 1, 1
+s,a=3,2	same: 0	removed (a,v,t): 0, 0, 0
+
+s,a=0,0	same: 0	removed (a,v,t): 0, 1, 1
+s,a=1,0	same: 0	removed (a,v,t): 0, 1, 1
+s,a=1,1	same: 0	removed (a,v,t): 0, 2, 2
+s,a=2,0	same: 0	removed (a,v,t): 0, 1, 1
+s,a=2,2	same: 0	removed (a,v,t): 0, 2, 2
+s,a=3,0	same: 0	removed (a,v,t): 0, 1, 1
+s,a=3,1	same: 0	removed (a,v,t): 0, 2, 2
+s,a=3,2	same: 1	removed (a,v,t): 0, 0, 0
+
+s,a=0,0	same: 0	removed (a,v,t): 0, 3, 3
+s,a=1,0	same: 0	removed (a,v,t): 0, 1, 1
+s,a=1,1	same: 0	removed (a,v,t): 0, 8, 8
+s,a=2,0	same: 0	removed (a,v,t): 0, 1, 1
+s,a=2,2	same: 2	removed (a,v,t): 0, 6, 6
+s,a=3,0	same: 0	removed (a,v,t): 0, 1, 1
+s,a=3,1	same: 0	removed (a,v,t): 0, 3, 3
+s,a=3,2	same: 0	removed (a,v,t): 0, 1, 1
+
+s,a=0,0	same: 952	removed (a,v,t): 2983, 4096, 7079
+s,a=1,0	same: 0	removed (a,v,t): 0, 55, 55
+s,a=1,1	same: 734	removed (a,v,t): 2009, 5327, 7336
+s,a=2,0	same: 15	removed (a,v,t): 4, 79, 83
+s,a=2,2	same: 2112	removed (a,v,t): 2801, 3289, 6090
+s,a=3,0	same: 0	removed (a,v,t): 0, 1, 1
+s,a=3,1	same: 4	removed (a,v,t): 2, 102, 104
+s,a=3,2	same: 3	removed (a,v,t): 0, 128, 128
+

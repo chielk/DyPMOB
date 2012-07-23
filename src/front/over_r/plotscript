@@ -1,0 +1,11 @@
+set nokey
+set size ratio -1
+set log y
+plot \
+	"pareto" u 1:2 linecolor 1 w l smooth unique,\
+	"pareto" u 1:2 linecolor 1 with points,\
+	"nopareto" u 1:2 linecolor 2 w l smooth unique,\
+	"nopareto" u 1:2 linecolor 2 with points
+set term postscript
+set output "pareto_difference.ps"
+replot

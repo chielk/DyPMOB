@@ -1,0 +1,154 @@
+0,0	same: 0	removed: 0
+
+1,0	same: 0	removed: 0
+1,1	same: 0	removed: 1
+
+2,0	same: 0	removed: 0
+2,2	same: 0	removed: 1
+
+3,0	same: 0	removed: 0
+3,1	same: 0	removed: 1
+3,2	same: 0	removed: 0
+
+
+0,0	same: 0	removed: 1
+
+1,0	same: 0	removed: 1
+1,1	same: 0	removed: 2
+
+2,0	same: 0	removed: 1
+2,2	same: 0	removed: 2
+
+3,0	same: 0	removed: 1
+3,1	same: 0	removed: 2
+3,2	same: 1	removed: 0
+
+
+0,0	same: 2	removed: 1
+
+1,0	same: 0	removed: 1
+1,1	same: 2	removed: 6
+
+2,0	same: 0	removed: 1
+2,2	same: 2	removed: 6
+
+3,0	same: 0	removed: 1
+3,1	same: 0	removed: 3
+3,2	same: 0	removed: 2
+
+
+0,0	same: 3550	removed: 1873
+
+1,0	same: 27	removed: 12
+1,1	same: 3550	removed: 2015
+
+2,0	same: 29	removed: 51
+2,2	same: 3550	removed: 1976
+
+3,0	same: 0	removed: 1
+3,1	same: 29	removed: 60
+3,2	same: 27	removed: 58
+
+
+Pareto front size:
+1, 1, 1, 2
+2, 2, 2, 3
+20, 20, 20, 10
+1218, 1218, 1218, 200
+
+
+
+======== corrected =======
+
+0,0	same: 0	removed: 0
+
+1,0	same: 0	removed: 0
+1,1	same: 0	removed: 0
+
+2,0	same: 0	removed: 0
+2,2	same: 0	removed: 0
+
+3,0	same: 0	removed: 0
+3,1	same: 0	removed: 0
+3,2	same: 0	removed: 0
+
+
+0,0	same: 0	removed: 0
+
+1,0	same: 0	removed: 0
+1,1	same: 0	removed: 1
+
+2,0	same: 0	removed: 0
+2,2	same: 0	removed: 1
+
+3,0	same: 0	removed: 0
+3,1	same: 0	removed: 1
+3,2	same: 1	removed: 0
+
+
+0,0	same: 2	removed: 0
+
+1,0	same: 0	removed: 0
+1,1	same: 2	removed: 5
+
+2,0	same: 0	removed: 0
+2,2	same: 2	removed: 5
+
+3,0	same: 0	removed: 0
+3,1	same: 0	removed: 2
+3,2	same: 0	removed: 1
+
+
+0,0	same: 3550	removed: 1872
+
+1,0	same: 27	removed: 11
+1,1	same: 3550	removed: 2014
+
+2,0	same: 29	removed: 50
+2,2	same: 3550	removed: 1975
+
+3,0	same: 0	removed: 0
+3,1	same: 29	removed: 59
+3,2	same: 27	removed: 57
+
+
+Pareto front size:
+1, 1, 1, 2
+2, 2, 2, 3
+20, 20, 20, 10
+1218, 1218, 1218, 200
+
+
+
+======== added =======
+
+t=0
+state same	worse left	total
+0		0		0		1		1
+1		0		0		1		1
+2		0		0		1		1
+3		0		0		2		2
+
+
+t=1
+state same	worse left	total
+0		0		0		2		2
+1		0		0		2		2
+2		0		0		2		2
+3		1		0		3		4
+
+
+t=2
+state same	worse left	total
+0		2		0		20		22
+1		2		5		20		27
+2		2		5		20		27
+3		0		3		10		13
+
+
+t=3
+state same	worse left	total	worse+left
+0		3550	1872	1218	
+1		3577	2025	1218
+2		3579	1225	1218
+3		56		116	200

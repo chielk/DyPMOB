@@ -1,0 +1,8 @@
+set nokey
+set size ratio -1
+set xrange[0:4.5]
+set yrange[0:4.5]
+plot "a0.txt" u 1:2 w p linecolor 0, "v.txt" u 1:2 w p linecolor 6, "a2.txt" u 1:2 w p linecolor 1, "a1.txt" u 1:2 w p linecolor 2;
+set term postscript
+set output "t7_55_points.ps"
+replot

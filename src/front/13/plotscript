@@ -1,0 +1,8 @@
+set nokey
+set size ratio -1
+set xrange[0:4]
+set yrange[0:4]
+plot "a0.txt" u 1:2 w p linecolor 0, "a1.txt" u 1:2 w p linecolor 2 lt 2, "a2.txt" u 1:2 w p linecolor 1 lt 2;
+set term postscript
+set output "t4_13_points.ps"
+replot

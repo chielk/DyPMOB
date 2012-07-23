@@ -242,8 +242,9 @@
 		\label{tab:turns}
 	\end{table}
 
-	\newgeometry{textwidth=\paperwidth,layouthoffset=.75cm}
+	\newgeometry{textwidth=\paperwidth,layoutvoffset=.75cm,textheight=\paperheight}
 	\begin{figure}
+		\centering
 		\begin{subfigure}[b]{0.3\textwidth}
 			\centering
 			\includegraphics[width=\textwidth]{images/t2s0}
@@ -268,6 +269,7 @@
 	\end{figure}
 
 	\begin{figure}
+		\centering
 		\begin{subfigure}[b]{0.3\textwidth}
 			\centering
 			\includegraphics[width=\textwidth]{images/t3s0}
@@ -292,6 +294,7 @@
 	\end{figure}
 
 	\begin{figure}
+		\centering
 		\begin{subfigure}[b]{0.45\textwidth}
 			\centering
 			\includegraphics[width=\textwidth]{images/r3_side}
@@ -324,6 +327,7 @@
 	\end{figure}
 
 	\begin{figure}
+		\centering
 		\begin{subfigure}[b]{0.45\textwidth}
 			\centering
 			\includegraphics[width=\textwidth]{images/r4_bird}
@@ -342,51 +346,58 @@
 	\end{figure}
 
 	\begin{figure}
+		\centering
 		\begin{subfigure}[b]{0.45\textwidth}
 			\centering
-			\includegraphics[width=\textwidth]{images/t4_12}
+			\includegraphics[width=\textwidth,height=7cm,keepaspectratio]{images/t4_12}
 			\caption{t=4, p=(0.1, 0.2)}
-			\label{fig:}
+			\label{fig:t4_12}
 		\end{subfigure}
 		~
 		\begin{subfigure}[b]{0.45\textwidth}
 			\centering
-			\includegraphics[width=\textwidth]{images/t4_13}
+			\includegraphics[width=\textwidth,height=7cm,keepaspectratio]{images/t4_13}
 			\caption{t=4, p=(0.1, 0.3)}
-			\label{fig:}
+			\label{fig:t4_13}
 		\end{subfigure}
 
 		\begin{subfigure}[b]{0.45\textwidth}
 			\centering
-			\includegraphics[width=\textwidth,height=10cm,keepaspectratio]{images/t4_26}
+			\includegraphics[width=\textwidth,height=7cm,keepaspectratio]{images/t4_26}
 			\caption{t=4, p=(0.2, 0.6)}
-			\label{fig:}
+			\label{fig:t4_26}
 		\end{subfigure}
 		~
 		\begin{subfigure}[b]{0.45\textwidth}
 			\centering
-			\includegraphics[width=\textwidth,height=10cm,keepaspectratio]{images/t4_28}
-			\caption{t=4, p=(0.2, 0.6)}
-			\label{fig:}
+			\includegraphics[width=\textwidth,height=7cm,keepaspectratio]{images/t4_28}
+			\caption{t=4, p=(0.2, 0.8)}
+			\label{fig:t4_28}
 		\end{subfigure}
 
 		\begin{subfigure}[b]{0.45\textwidth}
 			\centering
-			\includegraphics[width=\textwidth]{images/t4_47}
+			\includegraphics[width=\textwidth,height=7cm,keepaspectratio]{images/t4_47}
 			\caption{t=4, p=(0.4, 0.7)}
-			\label{fig:}
+			\label{fig:t4_47}
 		\end{subfigure}
 		~
 		\begin{subfigure}[b]{0.45\textwidth}
 			\centering
-			\includegraphics[width=\textwidth]{images/t7_55}
+			\includegraphics[width=\textwidth,height=7cm,keepaspectratio]{images/t7_55}
 			\caption{t=7, p=(0.5, 0.5)}
-			\label{fig:}
+			\label{fig:t7_55}
 		\end{subfigure}
 		\caption{Shape of the Pareto-front for different time steps and
-		probabilities}
+		probabilities with two agents}
 	\end{figure}
 
+	\begin{figure}
+		\centering
+		\includegraphics[width=\textwidth,height=10cm,keepaspectratio]{images/t3_555}
+		\label{fig:t3_555}
+		\caption{t=3, p=(0.5, 0.5, 0.5)}
+	\end{figure}
 	\restoregeometry
 	% section results (end)
 	\pagebreak
