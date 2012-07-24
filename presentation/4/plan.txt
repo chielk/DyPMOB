@@ -1,0 +1,18 @@
+Ondervindingen:
+- Grootte pareto set hangt af van kansen op nieuw bericht (.5 zorgt bijv voor
+	meer dubbele dus minder in totaal)
+- Winst door pareto-optimale set vs normale set is proportioneel aan grootte
+	oorspronkelijke set (elke kansverdeling heeft relatief ongeveer even veel
+	niet-optimale policies)
+- Pareto optimalisatie is sneller dan niet optimaliseren (t=3: .07s vs .15s,
+	r=4: t<4sec vs t>15min).
+- tijd-complexiteit groeit (ook na optimalisatie) sneller dan(?) exponentieel;
+	maximaal berekenbaar 4 tijdstappen voor meeste kansverdelingen met 2 agenten
+	en 2 voor 3 agenten
+
+Mogelijkheden toekomst:
+- profiler geeft aan dat berekenen pareto-set meeste tijd in beslag
+  neemt; mogelijk gebruik maken van structuur data:
+	* punten liggen altijd op beperkt aantal hyperplanes, haaks op de oorsprong
+	* c++ set is gesorteerd, dus kan per dimensie meteen de helft uitsluiten bij
+		toevoegen nieuwe vector
