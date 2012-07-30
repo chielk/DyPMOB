@@ -476,10 +476,51 @@
 	that contains only vectors that are higher or equal to the new vectors in
 	the first two dimensions. By using these features we can reduce the amount
 	of vectors that need to be compared to about a quarter.
+	% FIXME: Explain this better!
+	% FIXME: Only works on last two dimensions, only one dimension at the time
+	%
+	% 1	.9		.4
+	% 1	.8		.5
+	% 1	.7		.6
+	% 1	.6		.7
+	% 1	.5		.8
+	% 1	.4		.9
+	%					<- last two dimensions are sorted; can be categorised in one
+	%						go when the first n-2 values are the same
+	% 1.1	.8		.5
+	% 1.1	.7		.6
+	% 1.1	.6		.7
+	% 1.1	.5		.8
+	% may work if we save all vectors together that start with the same values
+
+	% Should be a tree for the first n-2 dimensions. C++: multimap
+	%
+	% 0.0	-> 0.0 -> [...]
+	%		-> 0.5 -> [...]
+	%		-> 1.0 -> [...]
+	%		-> 1.5 -> [...]
+	%
+	% 0.5	-> 0.0 -> [...]
+	%		-> 0.5 -> [...]
+	%		-> 1.0 -> [...]
+	%		-> 1.5 -> [...]
+	%
+	% 1.0	-> 0.0 -> [...]
+	%		-> 0.5 -> [...]
+	%		-> 1.0 -> [...]
+	%
+	% 1.5	-> 0.0 -> [...]
+	%		-> 0.5 -> [...]
+	%
+	% (n-2 * for (1/2 n))
+	% (1/2)^(n-2)*2*log(n)
+
 	% subsection sorted_sets (end)
 
+	\subsection{Aggressive Pruning}
+	\label{sub:aggressive_pruning}
 	% Reduce size by cutting on set size
-	% Reduce data size by using hyperplanes?
+	% subsection aggressive_pruning (end)
 	% section discussion (end)
 	\pagebreak
 
