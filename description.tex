@@ -85,18 +85,47 @@
 	can dynamically adapt priorities by changing the weights
 	\citep{barrett2008learning,natarajan2005dynamic}.
 
-	This research will evaluate the computational complexity of different
-	approaches, while working towards a more realistic setup. It aims to
-	combine dynamic priority with features such as predicting the transitional
-	probabilities, which are presumably not very random in real-world
-	situations. Other possibilities are partial observability, where agents are
-	unaware of each others states, or working without an event horizon, so that
-	it may work on any time-frame.
+	%This research will evaluate the computational complexity of different
+	%approaches, while working towards a more realistic setup. It aims to
+	%combine dynamic priority with features such as predicting the transitional
+	%probabilities, which are presumably not very random in real-world
+	%situations. Other possibilities are partial observability, where agents are
+	%unaware of each others states, or working without an event horizon, so that
+	%it may work on any time-frame.
 
-	If this problem is solved efficiently this may improve efficiency of network
-	communications, because less time is spent on communicating about data, and
-	buffer sizes can be decreased in modems where multiple devices are connected
-	through this modem.
+	%If this problem is solved efficiently this may improve efficiency of network
+	%communications, because less time is spent on communicating about data, and
+	%buffer sizes can be decreased in modems where multiple devices are connected
+	%through this modem.
+
+	\subsection{Relevance}
+	\label{sub:relevance}
+	Real-world situations that may benefit from this research may include
+	operating system schedulers, collaborative multi-agent communication, and
+	home networks.
+
+	For instance the Completely Fair Scheduler (CFS) that is used in the Linux
+	kernel as of the 2.6.23 release, prioritises tasks that use less time, while
+	this may not be the ideal solution, as tasks that only need to be performed
+	on a slow interval are often not of a high priority. Tasks such as user
+	interaction may require a fair amount of computation time, but this should
+	not reduce its precedence with regard to background tasks.
+
+	An example of a collaborative system are rescue robots that work together on
+	mapping an environment. Sharing all information as it is acquired could be
+	too heavy a burden on the network, and dynamic prioritisation could be used
+	to make the most efficient use of the available bandwidth.
+
+	A home network could include telephones, televisions, and personal
+	computers. Though we may want to prioritise the telephones and television to
+	guarantee continuity, we would also like to reduce lag in tasks that are
+	requested by the user such as loading a website. Telephone and television
+	prefer a specific continuous amount of throughput, but after some value do
+	not benefit much more, whereas other tasks may always benefit from more
+	throughput. When an alarm call is made, we would like to guarantee the
+	quality of the line before all else, but not drop other tasks if it can be
+	avoided.
+	% subsection relevance (end)
 	% section problem_definition (end)
 
 	\section{Approach}
@@ -190,8 +219,10 @@
 		\label{eq:bellman_q}
 		\end{equation}
 
-		For each state only Pareto-optimal rewards need to be saved, because they
-		contain all values for any definition of optimality.
+		As the $\max$-operator is not defined for vectors, the output consists of
+		a set instead of a scalar. To reduce the size of this set, we only use
+		the subset of Pareto-optimal values, which contains all optimal values
+		for any definition of optimality we would choose in this task.
 
 		Equation \ref{eq:pareto} shows the definition for the Pareto-optimal set.
 		\begin{equation}
@@ -215,6 +246,9 @@
 		For this research the algorithm can be compared to the turn-based
 		implementation where each agent may only send a message in its own turn.
 		% subsection comparisons (end)
+
+		% FIXME: number of states+actions
+		% FIXME: Something about how easy it is to extend to multiple channels
 	% section approach (end)
 
 	\end{multicols}
@@ -242,6 +276,11 @@
 		\label{tab:turns}
 	\end{table}
 
+	In figure \ref{fig:t2s0} we see that the size of the Pareto front is not
+	uniform for all probability distributions. The sizes are smallest where
+	probabilities are $0.5$ and on the diagonals of the quadrants. The
+	smaller set sizes represent the fact that these probability distributions
+	produce more duplicate vectors, which are only included once in the sets.
 	\newgeometry{textwidth=\paperwidth,layoutvoffset=.75cm,textheight=\paperheight}
 	\begin{figure}
 		\centering
@@ -398,8 +437,50 @@
 		\label{fig:t3_555}
 		\caption{t=3, p=(0.5, 0.5, 0.5)}
 	\end{figure}
-	\restoregeometry
+
+	% FIXME: something about worse than exponential growth
+	Figure XXX shows that the size of the Pareto-front grows faster than
+	exponentially
 	% section results (end)
+	\restoregeometry
+
+	\section{Discussion}
+	\label{sec:discussion}
+	\subsection{Sorted Sets}
+	\label{sub:sorted_sets}
+	% Reduce time complexity with sorted sets
+	As the C++ implementation of the \texttt{set} class is sorted, it is
+	possible to select subsets based on separators. In the case of adding a new
+	vector to the set there are three distinct possibilities:
+	\begin{enumerate}
+		\item Elements must be removed and the new vector added
+		\item No elements must be removed but the new vector must be added
+		\item No elements must be removed and the new vector must not be added
+	\end{enumerate}
+	When we consider the whole set per dimension, this separates the vectors in
+	the set into three different sets of interest:
+	\begin{enumerate}
+		\item Elements that may be strictly better
+		\item Elements that may be strictly worse
+		\item Elements that are not better or worse
+	\end{enumerate}
+	Sets 1 and 2 may intersect when the values of the vector that have been
+	compared are the same as the vector that is to be added.
+
+	As the sets are in a large part distributed on a few lines, we could
+	represent them as several sets, grouped by the lines they are on. As all
+	points are on a single line, the vectors in the set are sorted in both the
+	first and the second dimension.
+
+	All points of interest for ruling out that the vector are in the quadrant
+	that contains only vectors that are higher or equal to the new vectors in
+	the first two dimensions. By using these features we can reduce the amount
+	of vectors that need to be compared to about a quarter.
+	% subsection sorted_sets (end)
+
+	% Reduce size by cutting on set size
+	% Reduce data size by using hyperplanes?
+	% section discussion (end)
 	\pagebreak
 
 	\bibliographystyle{plainnat}
