@@ -28,11 +28,19 @@
 \thispagestyle{empty}
 \begin{document}
 	\maketitle
+
+	\begin{abstract}
+		This article explores the broadcasting channel problem, focusing on
+		dynamic priority planning. We will show that using the Pareto-optimal set
+		of solutions significantly reduces the set size and computation time, but
+		that it is still worse than exponential. We propose a method for reducing
+		computation time of generating the Pareto-optimal set and show that
+		pruning is necessary.
+	\end{abstract}
 	\begin{keywords}
 		Dynamic Programming, MDP, Markov Decision Process, Multiobjective,
-		Planning, Broadcasting Channel, Dynamic Priority
+		Planning, Broadcasting Channel, Dynamic Priority, Pareto-optimal set
 	\end{keywords}
-
 
 	\begin{multicols}{2}
 
@@ -84,19 +92,6 @@
 	\vec{V}^\pi$ \citep{vamplew2011empirical}, in a reward representation that
 	can dynamically adapt priorities by changing the weights
 	\citep{barrett2008learning,natarajan2005dynamic}.
-
-	%This research will evaluate the computational complexity of different
-	%approaches, while working towards a more realistic setup. It aims to
-	%combine dynamic priority with features such as predicting the transitional
-	%probabilities, which are presumably not very random in real-world
-	%situations. Other possibilities are partial observability, where agents are
-	%unaware of each others states, or working without an event horizon, so that
-	%it may work on any time-frame.
-
-	%If this problem is solved efficiently this may improve efficiency of network
-	%communications, because less time is spent on communicating about data, and
-	%buffer sizes can be decreased in modems where multiple devices are connected
-	%through this modem.
 
 	\subsection{Relevance}
 	\label{sub:relevance}
@@ -232,12 +227,12 @@
 		An example of a Pareto-optimal set for a two-dimensional system is shown in
 		figure \ref{fig:pareto}.
 
-	\begin{figurehere}
-		\centering
-		\includegraphics[scale=0.68]{images/pareto}
-		\captionof{figure}{Pareto-optimal set in a two-dimensional system}
-	   \label{fig:pareto}
-	\end{figurehere}
+		\begin{figurehere}
+			\centering
+			\includegraphics[scale=0.68]{images/pareto}
+			\captionof{figure}{Pareto-optimal set in a two-dimensional system}
+			\label{fig:pareto}
+		\end{figurehere}
 
 		% subsection state_representation (end)
 
@@ -254,6 +249,12 @@
 	\end{multicols}
 	\section{Results}
 	\label{sec:results}
+	% Worse than exponential complexity
+
+	% Effect of Pareto-optimisation
+
+	% Shape of the Pareto-front
+
 	Table \ref{tab:turns} shows that the turn-based approach is more efficient
 	as the number of agents and the probability of obtaining a new message
 	increases. This is because after the all agents have had their first turn,
@@ -305,6 +306,7 @@
 			\label{fig:t2s3}
 		\end{subfigure}
 		\caption{Time step 2}
+		\label{fig:t2}
 	\end{figure}
 
 	\begin{figure}
@@ -330,6 +332,7 @@
 			\label{fig:t3s3}
 		\end{subfigure}
 		\caption{Time step 3}
+		\label{fig:t3}
 	\end{figure}
 
 	\begin{figure}
@@ -429,6 +432,7 @@
 		\end{subfigure}
 		\caption{Shape of the Pareto-front for different time steps and
 		probabilities with two agents}
+		\label{fig:many_fronts}
 	\end{figure}
 
 	\begin{figure}
@@ -438,44 +442,58 @@
 		\caption{t=3, p=(0.5, 0.5, 0.5)}
 	\end{figure}
 
-	% FIXME: something about worse than exponential growth
-	Figure XXX shows that the size of the Pareto-front grows faster than
-	exponentially
+	\begin{figure}
+		\centering
+		\caption{Size of the pareto-optimal set with (red) and without (green)
+		Pareto-optimisation on a logarithmic scale}
+		\includegraphics[scale=.5]{images/pareto_difference}
+	   \label{fig:pareto_difference}
+	\end{figure}
+	Figure \ref{fig:pareto_difference} shows that the size of the Pareto-front
+	grows faster than exponentially. % FIXME
 	% section results (end)
 	\restoregeometry
 
 	\section{Discussion}
 	\label{sec:discussion}
 	\subsection{Sorted Sets}
-	\label{sub:sorted_sets}
-	% Reduce time complexity with sorted sets
-	As the C++ implementation of the \texttt{set} class is sorted, it is
-	possible to select subsets based on separators. In the case of adding a new
-	vector to the set there are three distinct possibilities:
-	\begin{enumerate}
-		\item Elements must be removed and the new vector added
-		\item No elements must be removed but the new vector must be added
-		\item No elements must be removed and the new vector must not be added
-	\end{enumerate}
-	When we consider the whole set per dimension, this separates the vectors in
-	the set into three different sets of interest:
-	\begin{enumerate}
-		\item Elements that may be strictly better
-		\item Elements that may be strictly worse
-		\item Elements that are not better or worse
-	\end{enumerate}
-	Sets 1 and 2 may intersect when the values of the vector that have been
-	compared are the same as the vector that is to be added.
+		\label{sub:sorted_sets}
+		% Reduce time complexity with sorted sets
+		As the C++ implementation of the \texttt{set} class is sorted, it is
+		possible to select subsets based on separators. In the case of adding a
+		new vector to the set there are three distinct possible situations:
+		\begin{enumerate}
+			\item Elements must be removed and the new vector added
+			\item No elements must be removed but the new vector must be added
+			\item No elements must be removed and the new vector must not be added
+		\end{enumerate}
+		When we consider the whole set per dimension, we can separate the vectors
+		in the set into three different sets of interest:
+		\begin{enumerate}
+			\item Elements that may be strictly better
+			\item Elements that may be strictly worse
+			\item Elements that are not better or worse
+		\end{enumerate}
+		Sets 1 and 2 may intersect when the values of the vector that have been
+		compared are the same as the vector that is to be added.  The fist and
+		second categories contain values that are equal or larger or equal or
+		smaller in each evaluated dimension respectively.  Vectors that have a
+		higher value in at least one dimension and a lower value in another, fall
+		in the third category.  All vectors in the third category can be excluded
+		from evaluation, as they do not affect the actions that must be
+		performed.  As we explore more dimensions the size of the third set will
+		increase and the first two will decrease.
 
-	As the sets are in a large part distributed on a few lines, we could
-	represent them as several sets, grouped by the lines they are on. As all
-	points are on a single line, the vectors in the set are sorted in both the
-	first and the second dimension.
+		Since the sets are in a large part distributed on a few lines, as can be
+		seen in figures \ref{fig:t2}, \ref{fig:t3}, and \ref{fig:many_fronts}, we
+		could represent them as several sets, grouped by the lines they are on.
+		As all points are on a single line, the vectors in the set are sorted in
+		both the first and the second dimension.
 
-	All points of interest for ruling out that the vector are in the quadrant
-	that contains only vectors that are higher or equal to the new vectors in
-	the first two dimensions. By using these features we can reduce the amount
-	of vectors that need to be compared to about a quarter.
+		All points of interest for ruling out that the vector are in the quadrant
+		that contains only vectors that are higher or equal to the new vectors in
+		the first two dimensions. By using these features we can reduce the
+		amount of vectors that need to be compared to about a quarter.
 	% FIXME: Explain this better!
 	% FIXME: Only works on last two dimensions, only one dimension at the time
 	%
@@ -522,8 +540,14 @@
 	% subsection sorted_sets (end)
 
 	\subsection{Aggressive Pruning}
-	\label{sub:aggressive_pruning}
-	% Reduce size by cutting on set size
+		\label{sub:aggressive_pruning}
+		Figure \ref{fig:pareto_difference} shows that the complexity of the
+		algorithm is worse than exponential, and therefore it is not usable
+		beyond around four time-steps in a set-up with two agents, and fewer
+		time-steps for more agents. This makes it necessary to prune the set, for
+		example by using only the $\varepsilon$-approximate Pareto-set.
+		Clustering algorithms could be used to keep the set on a constant maximum
+		size for any time-step.
 	% subsection aggressive_pruning (end)
 	% section discussion (end)
 	\pagebreak
