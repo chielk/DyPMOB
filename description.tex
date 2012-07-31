@@ -53,7 +53,10 @@
 	messages, in addition to throughput.
 	In section \ref{sec:problem_definition} we redefine the problem to account
 	for these considerations. Section \ref{sec:approach} covers the methods used
-	to meet these requirements.
+	to meet these requirements. The results are described in section
+	\ref{sec:results}, and section \ref{sec:discussion} proposes an algorithm
+	that exploits the properties of the data to reduce the time complexity of
+	calculating the Pareto-optimal set.
 	% section introduction (end)
 
 	\section{Problem definition}
@@ -171,8 +174,13 @@
 		\end{bmatrix}$$
 		because all agents are equal and connected to the network in the same
 		way.
-
 		For these reasons the second representation was chosen.
+
+		This method can also be extended to a multi-channel setup: Where we would
+		reward only one agent and only when it was the only agent to send
+		a message in the single-channel set-up, we can reward any number of
+		agents that sent a message, if there were not more than the number of
+		channels.
 		% subsection reward_representation (end)
 
 		\subsection{State Representation}
@@ -229,39 +237,72 @@
 
 		\begin{figurehere}
 			\centering
-			\includegraphics[scale=0.68]{images/pareto}
+			\includegraphics[width=\columnwidth]{images/pareto}
 			\captionof{figure}{Pareto-optimal set in a two-dimensional system}
 			\label{fig:pareto}
 		\end{figurehere}
 
+		The number of different possible states is $2^n$ where $n$ is the number
+		of agents. In the fully observable system there are up to $n+1$ possible
+		actions: any one agent can send a message or none at all. In a system
+		where agents are unable to observe the states of other agents there are
+		up to $2^n$ possible actions as any combination of agents can send a
+		message.
 		% subsection state_representation (end)
 
-		\subsection{Comparisons}
-		\label{sub:comparisons}
-		For this research the algorithm can be compared to the turn-based
-		implementation where each agent may only send a message in its own turn.
-		% subsection comparisons (end)
-
-		% FIXME: number of states+actions
-		% FIXME: Something about how easy it is to extend to multiple channels
 	% section approach (end)
 
-	\end{multicols}
 	\section{Results}
 	\label{sec:results}
-	% Worse than exponential complexity
-
-	% Effect of Pareto-optimisation
-
-	% Shape of the Pareto-front
-
 	Table \ref{tab:turns} shows that the turn-based approach is more efficient
 	as the number of agents and the probability of obtaining a new message
 	increases. This is because after the all agents have had their first turn,
 	the probability of having a message to send is $P(m)^n$, as there are
 	$n$ times that a new message can fill the buffer with probability $P(m)$.
 
-	\begin{table}[h]
+	In figure \ref{fig:3d_size} we see that the size of the Pareto front is not
+	uniform for all probability distributions. The sizes are smallest where
+	probabilities are $0.5$ and on the diagonals of the quadrants. The
+	smaller set sizes represent the fact that these probability distributions
+	produce more duplicate vectors, which are only included once in the sets.
+
+	Figure \ref{fig:pareto_difference} shows the difference in the set size with
+	and without Pareto-optimisation for time-steps up to 4. Although we can see
+	that the optimisation reduces the size more than an order of magnitude, it
+	also shows that that the size of the set grows faster than exponential in
+	both cases.
+	The reason for this complexity can be found by analysing the Bellman
+	equation (\ref{eq:bellman_q}). The $\max$-operator returns a set of
+	solutions for each action, and the sets are summed. As an example to
+	illustrate the problem, consider four actions each containing a set of four
+	rewards. The result contains each possible sum of any vector from each set.
+	This results in a set of $4^4=256$ elements. For the next time-step, this
+	would result in a set of $4^{256}~=1.34\cdot 10^{154}$ vectors (assuming
+	that there were no duplicates and all states had the same set size).
+
+	In figure \ref{fig:many_fronts} we can see the distribution of the
+	Pareto-fronts per action for several different probabilities with two
+	agents. Black represents sending no message, red and green are for the
+	different agents, and in the last image the overlapping vectors are shown in
+	yellow. Striking is that the points are all located on up to two lines (or
+	hyperplanes) per action, where the lines are always perpendicular to the
+	line that makes a right angle from the origin. In figure \ref{fig:t2} we can
+	see that the points are also divided in two lines per action, which suggests
+	that the number of hyperplanes is independent of the time-step, and
+	presumably dependent on the number of agents. Figure \ref{fig:t3_555}
+	suggests that this may also hold true for more dimensions.
+
+	\begin{figurehere}
+		\centering
+		\includegraphics[width=\columnwidth]{images/pareto_difference}
+		\captionof{figure}{Size of the pareto-optimal set with (red) and without
+		(green) Pareto-optimisation on a logarithmic scale for different
+		time-steps}
+	   \label{fig:pareto_difference}
+	\end{figurehere}
+
+	\end{multicols}
+	\begin{tablehere}
 		\centering
 		\begin{tabular}{|r|rrrrr|}
 			\hline
@@ -273,15 +314,11 @@
 			$p=0.7$ & 699996 & 909630 & 972937 & 991940 & 997638\\
 			\hline
 		\end{tabular}
-		\caption{Total throughput for turn-based policy after 1000000 turns}
+		\captionof{table}{Total throughput for turn-based policy after 1000000
+		turns}
 		\label{tab:turns}
-	\end{table}
+	\end{tablehere}
 
-	In figure \ref{fig:t2s0} we see that the size of the Pareto front is not
-	uniform for all probability distributions. The sizes are smallest where
-	probabilities are $0.5$ and on the diagonals of the quadrants. The
-	smaller set sizes represent the fact that these probability distributions
-	produce more duplicate vectors, which are only included once in the sets.
 	\newgeometry{textwidth=\paperwidth,layoutvoffset=.75cm,textheight=\paperheight}
 	\begin{figure}
 		\centering
@@ -366,6 +403,7 @@
 		\end{subfigure}
 		\caption{Size of the pareto-front over different probability
 		distributions, t=3.}
+		\label{fig:3d_size}
 	\end{figure}
 
 	\begin{figure}
@@ -431,34 +469,33 @@
 			\label{fig:t7_55}
 		\end{subfigure}
 		\caption{Shape of the Pareto-front for different time steps and
-		probabilities with two agents}
+			probabilities with two agents. Black indicates no action, green and
+			red are for the different actions. Yellow in figure \ref{fig:t7_55} is
+			used to thow the overlap between values of the two actions. The axes
+			represent the throughput of the respective agents}
 		\label{fig:many_fronts}
 	\end{figure}
 
 	\begin{figure}
 		\centering
 		\includegraphics[width=\textwidth,height=10cm,keepaspectratio]{images/t3_555}
-		\label{fig:t3_555}
 		\caption{t=3, p=(0.5, 0.5, 0.5)}
+		\label{fig:t3_555}
 	\end{figure}
-
-	\begin{figure}
-		\centering
-		\caption{Size of the pareto-optimal set with (red) and without (green)
-		Pareto-optimisation on a logarithmic scale}
-		\includegraphics[scale=.5]{images/pareto_difference}
-	   \label{fig:pareto_difference}
-	\end{figure}
-	Figure \ref{fig:pareto_difference} shows that the size of the Pareto-front
-	grows faster than exponentially. % FIXME
 	% section results (end)
 	\restoregeometry
 
+	\begin{multicols}{2}
 	\section{Discussion}
 	\label{sec:discussion}
+	Due to computational complexity it was infeasible to calculate the fronts
+	for more than two agents, except in the case where all probabilities are
+	$0.5$. In future research more aggressive pruning
+	(\ref{sub:aggressive_pruning}) could help to analyse the shape of the
+	Pareto-set and may confirm or deny our suspicions about the distribution of
+	vectors described in section \ref{sec:results}.
 	\subsection{Sorted Sets}
 		\label{sub:sorted_sets}
-		% Reduce time complexity with sorted sets
 		As the C++ implementation of the \texttt{set} class is sorted, it is
 		possible to select subsets based on separators. In the case of adding a
 		new vector to the set there are three distinct possible situations:
@@ -479,9 +516,9 @@
 		second categories contain values that are equal or larger or equal or
 		smaller in each evaluated dimension respectively.  Vectors that have a
 		higher value in at least one dimension and a lower value in another, fall
-		in the third category.  All vectors in the third category can be excluded
+		in the third category. All vectors in the third category can be excluded
 		from evaluation, as they do not affect the actions that must be
-		performed.  As we explore more dimensions the size of the third set will
+		performed. As we explore more dimensions the size of the third set will
 		increase and the first two will decrease.
 
 		Since the sets are in a large part distributed on a few lines, as can be
@@ -494,49 +531,6 @@
 		that contains only vectors that are higher or equal to the new vectors in
 		the first two dimensions. By using these features we can reduce the
 		amount of vectors that need to be compared to about a quarter.
-	% FIXME: Explain this better!
-	% FIXME: Only works on last two dimensions, only one dimension at the time
-	%
-	% 1	.9		.4
-	% 1	.8		.5
-	% 1	.7		.6
-	% 1	.6		.7
-	% 1	.5		.8
-	% 1	.4		.9
-	%					<- last two dimensions are sorted; can be categorised in one
-	%						go when the first n-2 values are the same
-	% 1.1	.8		.5
-	% 1.1	.7		.6
-	% 1.1	.6		.7
-	% 1.1	.5		.8
-	% may work if we save all vectors together that start with the same values
-
-	% Should be a tree for the first n-2 dimensions. C++: multimap
-	%
-	% 0.0	-> 0.0 -> [...]
-	%		-> 0.5 -> [...]
-	%		-> 1.0 -> [...]
-	%		-> 1.5 -> [...]
-	%
-	% 0.5	-> 0.0 -> [...]
-	%		-> 0.5 -> [...]
-	%		-> 1.0 -> [...]
-	%		-> 1.5 -> [...]
-	%
-	% 1.0	-> 0.0 -> [...]
-	%		-> 0.5 -> [...]
-	%		-> 1.0 -> [...]
-	%
-	% 1.5	-> 0.0 -> [...]
-	%		-> 0.5 -> [...]
-	%
-	% (n-2 * for (1/2 n))
-	% (1/2)^(n-2)*2*log(n)
-
-	% discovering in which line(/hyperplane) a vector is (for adding):
-	% unique key of hyperplane: norm of orthogonal projection on [1 1 1 1 1 ...]
-	% = abs(dot(v, n/|n|)) met n = [1 1 1 1]'/norm (with error margin)
-
 	% subsection sorted_sets (end)
 
 	\subsection{Aggressive Pruning}
@@ -550,9 +544,55 @@
 		size for any time-step.
 	% subsection aggressive_pruning (end)
 	% section discussion (end)
+	\end{multicols}
 	\pagebreak
 
 	\bibliographystyle{plainnat}
 	\bibliography{references}
 \end{document}
+
+% Notes
+% FIXME: Only works on last two dimensions, only one dimension at the
+% time
+%
+% 1	.9		.4
+% 1	.8		.5
+% 1	.7		.6
+% 1	.6		.7
+% 1	.5		.8
+% 1	.4		.9
+%					<- last two dimensions are sorted; can be categorised in
+%						one go when the first n-2 values are the same
+% 1.1	.8		.5
+% 1.1	.7		.6
+% 1.1	.6		.7
+% 1.1	.5		.8
+% may work if we save all vectors together that start with the same
+% values
+%
+% Should be a tree for the first n-2 dimensions. C++: multimap
+%
+% 0.0	-> 0.0 -> [...]
+%		-> 0.5 -> [...]
+%		-> 1.0 -> [...]
+%		-> 1.5 -> [...]
+%
+% 0.5	-> 0.0 -> [...]
+%		-> 0.5 -> [...]
+%		-> 1.0 -> [...]
+%		-> 1.5 -> [...]
+%
+% 1.0	-> 0.0 -> [...]
+%		-> 0.5 -> [...]
+%		-> 1.0 -> [...]
+%
+% 1.5	-> 0.0 -> [...]
+%		-> 0.5 -> [...]
+%
+% (n-2 * for (1/2 n))
+% (1/2)^(n-2)*2*log(n)
+%
+% discovering in which line(/hyperplane) a vector is (for adding):
+% unique key of hyperplane: norm of orthogonal projection on [1 1 1 1 1 ...]
+% = abs(dot(v, n/|n|)) met n = [1 1 1 1]'/norm (with error margin)
 
