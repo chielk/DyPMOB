@@ -12,6 +12,7 @@
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{comment}
+\usepackage{amssymb}
 \def\keywords{\vspace{.5em}
 	{\textbf{Keywords}:\,\relax
 }}
@@ -30,15 +31,16 @@
 \setlength{\evensidemargin}{0in}
 \thispagestyle{empty}
 \begin{document}
+	\setlength{\footskip}{3cm}
 	\maketitle
 
 	\begin{abstract}
 		This article explores the broadcasting channel problem, focusing on
 		dynamic priority planning. We will show that using the Pareto-optimal set
 		of solutions significantly reduces the set size and computation time, but
-		that it is still worse than exponential. We propose a method for reducing
-		computation time of generating the Pareto-optimal set and show that
-		pruning is necessary.
+		that it is still infeasible. We propose a method for reducing computation
+		time of generating the Pareto-optimal set and show that pruning is
+		necessary.
 	\end{abstract}
 	\begin{keywords}
 		Dynamic Programming, MDP, Markov Decision Process, Multiobjective,
@@ -73,26 +75,20 @@
 	Agents have a single buffer that may contain a message. An example of a
 	two-agent setup is shown in figure \ref{fig:agents_ee}.
 
+	\vspace{0.5cm}
 	\begin{figurehere}
 		\centering
-		\includegraphics[scale=0.3]{images/agents_ee}
+		\includegraphics[scale=0.3]{images/agents_ee-crop}
 		\captionof{figure}{A setup with two agents}
 	   \label{fig:agents_ee}
 	\end{figurehere}
+	\vspace{0.5cm}
 
 	At any concrete time-step an agent $i$ with an empty buffer may get a new
-	message with probability $p_i(s' |s, \vec{a})$ in a fully observable Markov
-	decision process (MDP), and $p_i(s' \vec{o}|s, \vec{a})$ in a partially
-	observable Markov decision process (POMDP) \citep{hansen2004dynamic}.
-
+	message with probability $p_i(s' |s, \vec{a})$.
 	The problem of optimising throughput has been solved for POMDPs
 	\citep{ooi1996decentralized, hansen2004dynamic}, but in this case we would
 	also like to avoid dominance of a single agent over the channel.
-
-	Finding an optimal policy in terms of both throughput and dominance will
-	first be solved for a fully observable MDP with two agents. Then the aim is
-	to generalise towards any number of agents, a POMDP, and/or \emph{learning}
-	the policy, dependent on the amount of time available.
 
 	\citet{hansen2004dynamic} have provided a solution with dynamic programming.
 	This method will be extended so that for any weight vector $\vec{w}$ it will
@@ -108,11 +104,12 @@
 	home networks.
 
 	For instance the Completely Fair Scheduler (CFS) that is used in the Linux
-	kernel as of the 2.6.23 release, prioritises tasks that use less time, while
-	this may not be the ideal solution, as tasks that only need to be performed
+	kernel (as of the 2.6.23 release), prioritises tasks that use less time.
+	This may not be the ideal solution, as tasks that only need to be performed
 	on a slow interval are often not of a high priority. Tasks such as user
 	interaction may require a fair amount of computation time, but this should
-	not reduce its precedence with regard to background tasks.
+	not reduce its precedence with regard to background tasks, as the user will
+	notice lags former more than in the latter.
 
 	An example of a collaborative system are rescue robots that work together on
 	mapping an environment. Sharing all information as it is acquired could be
@@ -181,11 +178,10 @@
 		way.
 		For these reasons the second representation was chosen.
 
-		This method can also be extended to a multi-channel setup: Where we would
-		reward only one agent and only when it was the only agent to send
-		a message in the single-channel set-up, we can reward any number of
-		agents that sent a message, if there were not more than the number of
-		channels.
+		This method can also be extended to a multi-channel set-up: Where we
+		would reward only one agent, and only when it was the only agent to send a
+		message in the single-channel set-up, we can reward any number of agents
+		that sent a message, if there were not more than the number of channels.
 		% subsection reward_representation (end)
 
 		\subsection{State Representation}
@@ -228,9 +224,11 @@
 		\end{equation}
 
 		As the $\max$-operator is not defined for vectors, the output consists of
-		a set instead of a scalar. To reduce the size of this set, we only use
-		the subset of Pareto-optimal values, which contains all optimal values
-		for any definition of optimality we would choose in this task.
+		a set of vectors instead of a scalar. To reduce the size of this set, we
+		only use the subset of Pareto-optimal values, which contains all optimal
+		values for any definition of optimality we would choose in this task.
+		A vector belongs in a Pareto-optimal set if there are no other vectors
+		that are higher or equal in all dimensions.
 
 		Equation \ref{eq:pareto} shows the definition for the Pareto-optimal set.
 		\begin{equation}
@@ -240,12 +238,14 @@
 		An example of a Pareto-optimal set for a two-dimensional system is shown in
 		figure \ref{fig:pareto}.
 
+		\vspace{0.5cm}
 		\begin{figurehere}
 			\centering
 			\includegraphics[width=\columnwidth]{images/pareto}
 			\captionof{figure}{Pareto-optimal set in a two-dimensional system}
 			\label{fig:pareto}
 		\end{figurehere}
+		\vspace{0.5cm}
 
 		The number of different possible states is $2^n$ where $n$ is the number
 		of agents. In the fully observable system there are up to $n+1$ possible
@@ -255,35 +255,193 @@
 		message.
 		% subsection state_representation (end)
 
-		\subsection{implementation}
+		\subsection{Implementation}
 		\label{sub:implementation}
-		The planning algorithm was implemented in C++.
+		The planning algorithm was implemented in C++, as it allows for low-level
+		optimisations as well as object-oriented programming and generic
+		programming, and a wide array of libraries such as The Standard Template
+		Library (STL), are available.
 		The goal of the algorithm is to compute the values for every action in
-		every state of every time.
-		As the number of states and time steps is known, all states 
-		% generic: any number of states and agents
+		every state of every time, given an optimal policy.
 
-\begin{comment}
-class Q
-{
-   public:
-      Q(R default_value, int n_agents);
-      void add(int action, R value);
-      void add_all(int action, std::set<R> value, float p); 
-      void print(int t, int s); 
-      std::set<R> get_V();
+		States and actions are represented as integers, which can be seen as
+		arrays of booleans. For example, binary $0100$ represents the
+		\emph{state} where only the third agent has a message, or the
+		\emph{action} where only the third agent sends a message, dependent on
+		context.
 
-   private:
-      void add_V(R value);
-      std::vector<std::set<R> > actions;
-      std::set<R> V;
-};
-\end{comment}
+		Algorithm \ref{alg:main} shows the main loop of the algorithm. Starting
+		from the last time-step (at $t=0$) we calculate the reward of all
+		possible actions.
+		The \textsc{try\_add} method described in algorithm
+		\ref{alg:add_v} adds the vector to the set $Q(s_t, a)$ if it is
+		Pareto-optimal. And if it is optimal, it also tries to add it to
+		$V(t_s)$. The loop exits early when it is apparent that the new vector
+		does not belong in the $Q(s_t, a)$ set. When it is sub-optimal it also does not
+		belong in the $V(s_t)$ set, as it contains the optimal vectors from all
+		actions, and is thus always as least as strict as $Q(s_t, a)$.
+		While the value at $t=0$ is only dependent on direct reward, for the
+		other time-steps it is the sum of the direct reward for taking the action
+		and the weighted average of the values of the possible transition states
+		(multiplied with the probability of reaching that state given the
+		action). On line \ref{alg:main:increment} the action is converted to an
+		index (i.e. $0100$ to 3), and 1 (the direct reward) is added to the
+		vectors in that dimension.
 
+		\end{multicols}
+		\begin{algorithm}[h]
+			\captionof{algorithm}{Main Loop}
+			\begin{algorithmic}[1]
+				\Procedure{main}{$\mathit{n\_agents}, \mathit{time}, \mathit{p\_msg}[]$}
+				\State $\mathit{n\_states} \gets \Call{pow}{2, \mathit{n\_agents}}$
+				\State {$Q[\mathit{max\_t}][\mathit{n\_states}]$} \Comment{Initialise Q}
+				\For {$t \gets 0, \mathit{time}$}
+				\For {$s \gets 0, \mathit{n\_states}$}
+				\State $\mathit{actions} \gets \Call{get\_actions}{s, \mathit{n\_agents}}$
+				\ForAll {$a \in \mathit{actions}$}
+				\State $\mathit{rewards}[] \gets \Call{trans\_rewards}{a, s, \mathit{n\_states}, \mathit{p\_msg}}$
+				\Comment{States multiplied with probabilities}
+				\State $\mathit{new\_rewards} = \Call{add\_sets}{\mathit{rewards}}$
+				\If{$a$} \Comment{Action is not `do nothing'}
+				\ForAll {$r \in \mathit{rewards}$}
+				\State $\Call{increment}{}~r[\Call{action2index}{a}]$ \label{alg:main:increment}
+				\Comment{Add direct reward}
+				\State $Q[t][s].\Call{try\_add}{a, r}$ \Comment{Try to add to set}
+				\EndFor
+				\EndIf
+				\EndFor
+				\EndFor
+				\EndFor
+				\EndProcedure
+			\end{algorithmic}
+			\label{alg:main}
+		\end{algorithm}
+
+		\begin{algorithm}[h!]
+			\captionof{algorithm}{Adding vectors to the set}
+			\begin{algorithmic}[1]
+				\Procedure{Q.try\_add}{$a, r$}
+				\ForAll {$\mathit{r\_old} \in \mathit{actions}[a]$}
+				\If {$\Call{same}{\mathit{r\_old}, r}$}
+				\State \Return \Comment{The same vector already in set}
+				\ElsIf {$\Call{Better}{\mathit{r\_old}, r}$}
+				\State \Return \Comment{Better vector already in set}
+				\ElsIf {$\Call{Better}{r, \mathit{r\_old}}$}
+				\State $\mathit{actions}[a].$\Call{erase}{$\mathit{r\_old}$}
+				\Comment{Remove from set and try to remove more}
+				\EndIf
+				\EndFor
+				\State $\mathit{actions}[a].$\Call{insert}{$r$}
+				\Comment{Done removing, add to set}
+				\State \Call{try\_add\_v}{$r$} \Comment{Try to add to V}
+				\EndProcedure
+			\end{algorithmic}
+			\label{alg:add_v}
+		\end{algorithm}
+
+		\begin{multicols}{2}
+		The function described in algorithm \ref{alg:add_sets} adds the sets of
+		sets of vectors. It is analogous to the summation symbol in the Bellman
+		equation. The resulting set consists of each possible sum of vectors from
+		each set. The algorithm works by setting the first set aside, and then
+		replaced by all sums with the vectors of each next set.
+		\end{multicols}
+
+		\begin{algorithm}[h!]
+			\captionof{algorithm}{Adding sets of vectors}
+			\begin{algorithmic}[1]
+				\Function{add\_sets}{$\mathit{sets}$}
+				\State $\mathit{temp} = \{\}$
+				\State $\mathit{result} = \mathit{sets}.\Call{pop}{}()$
+				\ForAll {$s \in \mathit{sets}$}
+				\State $\mathit{temp} = \Call{copy}{result}$
+				\State $\mathit{result} = \{\}$
+				\ForAll {$v \in s$}
+				\ForAll {$w \in \mathit{temp}$}
+				\State $\mathit{result}.\Call{insert}{v+w}$
+				\EndFor
+				\EndFor
+				\EndFor
+				\State \Return $\mathit{result}$
+				\EndFunction
+			\end{algorithmic}
+			\label{alg:add_sets}
+		\end{algorithm}
+
+		\begin{multicols}{2}
+		The \textsc{trans\_rewards} function generates all possible states and
+		compares them to the state minus the action. For example if the state is
+		$1111$ and the action is $0100$, the result is $1011$. Then all possible
+		transition states are compared to this state. In this case only $1111$
+		and $1011$ can follow. The transition probabilities are then calculated
+		by multiplying each $0$ in the base with the probability
+		$\mathit{p\_msg[i]}$ or $1 -\mathit{p\_msg[i]}$, dependent on whether it
+		becomes a $1$ or a $0$ respectively.
+		\end{multicols}
+
+		\begin{algorithm}[h!]
+			\captionof{algorithm}{Getting transitions and probabilities}
+			\begin{algorithmic}[1]
+				\Function{trans\_rewards}{$a, s, \mathit{n\_states}, \mathit{p\_msg}$}
+				\State $\mathit{states} = \{\}$
+				\Comment{In the real implementation this variable is static and used as a cache}
+				\State $\mathit{least\_state} \gets s \veebar a$
+				\Comment{Remove message that has been sent}
+				\For {$\mathit{mask} \gets 0, \mathit{n\_states}$}
+				\State $\mathit{new\_state} \gets \mathit{least\_state} \vee \mathit{mask}$
+				\Comment{Transition states only \emph{add} messages}
+				\State $p \gets $ \Call{trans\_p}{$\mathit{new\_state}, \mathit{least\_state}, \mathit{p\_msg}$}
+				\State $\mathit{states}.$\Call{insert}{$p \cdot \mathit{new\_state}$}
+				\Comment{\textit{states} is a set, so duplicates are not added}
+				\EndFor
+				\State \Return $\mathit{states}$
+				\EndFunction
+			\end{algorithmic}
+
+			\begin{algorithmic}[1]
+				\Function{trans\_p}{$\mathit{new\_state}, \mathit{least\_state}, \mathit{p\_msg}$}
+				\State $\mathit{p\_total} \gets 1.0$
+				\State $\mathit{mask} \gets 1$
+				\ForAll{$p \in mathit{p\_msg}$}
+				\If{$\neg(\mathit{mask} \wedge \mathit{state})$}
+				\Comment{State can change (agent has no message)}
+				\If{$\mathit{mask} \wedge \mathit{new\_state}$}
+				\State $\mathit{p\_total} \gets \mathit{p\_total} \cdot (1-p)$
+				\Comment{Agents gets no message}
+				\Else
+				\State $\mathit{p\_total} \gets \mathit{p\_total} \cdot p$
+				\Comment{Agents gets message}
+				\EndIf
+				\EndIf
+				\State $\mathit{mask} \gets 2^{\mathit{mask}}$ \Comment{Bit shift}
+				\EndFor
+				\State \Return{$\mathit{p\_total}$}
+				\EndFunction
+			\end{algorithmic}
+			\label{alg:trans_rewards}
+		\end{algorithm}
 		% subsection implementation (end)
-
 	% section approach (end)
+	\clearpage
 
+	\begin{tablehere}
+		\centering
+		\begin{tabular}{|r|rrrrr|}
+			\hline
+			& 1 agent & 2 agents & 3 agents& 4 agents& 5 agents\\
+			\hline
+			$p=0.1$ & 100157 & 190211 & 271604 & 344064 & 410397\\
+			$p=0.2$ & 200015 & 360030 & 488788 & 590683 & 672028\\
+			$p=0.5$ & 500050 & 749407 & 875208 & 937568 & 968696\\
+			$p=0.7$ & 699996 & 909630 & 972937 & 991940 & 997638\\
+			\hline
+		\end{tabular}
+		\captionof{table}{Total throughput for turn-based policy after 1000000
+		turns}
+		\label{tab:turns}
+	\end{tablehere}
+
+	\begin{multicols}{2}
 	\section{Results}
 	\label{sec:results}
 	Table \ref{tab:turns} shows that the turn-based approach is more efficient
@@ -319,90 +477,74 @@ class Q
 	different agents, and in the last image the overlapping vectors are shown in
 	yellow. Striking is that the points are all located on up to two lines (or
 	hyperplanes) per action, where the lines are always perpendicular to the
-	line that makes a right angle from the origin. In figure \ref{fig:t2} we can
+	line that makes a right angle from the origin. In figure
+	\ref{fig:fronts_actions} we can
 	see that the points are also divided in two lines per action, which suggests
 	that the number of hyperplanes is independent of the time-step, and
 	presumably dependent on the number of agents. Figure \ref{fig:t3_555}
 	suggests that this may also hold true for more dimensions.
 
+	\vspace{.5cm}
 	\begin{figurehere}
 		\centering
-		\includegraphics[width=\columnwidth]{images/pareto_difference}
+		\includegraphics[width=.8\columnwidth]{images/pareto_difference}
 		\captionof{figure}{Size of the pareto-optimal set with (red) and without
 		(green) Pareto-optimisation on a logarithmic scale for different
 		time-steps}
 	   \label{fig:pareto_difference}
 	\end{figurehere}
+	\vspace{0.5cm}
 
 	\end{multicols}
-	\begin{tablehere}
-		\centering
-		\begin{tabular}{|r|rrrrr|}
-			\hline
-			& 1 agent & 2 agents & 3 agents& 4 agents& 5 agents\\
-			\hline
-			$p=0.1$ & 100157 & 190211 & 271604 & 344064 & 410397\\
-			$p=0.2$ & 200015 & 360030 & 488788 & 590683 & 672028\\
-			$p=0.5$ & 500050 & 749407 & 875208 & 937568 & 968696\\
-			$p=0.7$ & 699996 & 909630 & 972937 & 991940 & 997638\\
-			\hline
-		\end{tabular}
-		\captionof{table}{Total throughput for turn-based policy after 1000000
-		turns}
-		\label{tab:turns}
-	\end{tablehere}
 
-	\newgeometry{textwidth=\paperwidth,layoutvoffset=.75cm,textheight=\paperheight}
+	%\newgeometry{layoutvoffset=.5cm,textheight=.8\paperheight}
 	\begin{figure}
 		\centering
 		\begin{subfigure}[b]{0.3\textwidth}
 			\centering
 			\includegraphics[width=\textwidth]{images/t2s0}
-			\caption{s=(e,e)}
+			\caption{$t=2, s=(e,e)$}
 			\label{fig:t2s0}
 		\end{subfigure}
 		~
 		\begin{subfigure}[b]{0.3\textwidth}
 			\centering
 			\includegraphics[width=\textwidth]{images/t2s1}
-			\caption{s=(m,e)}
+			\caption{$t=2, s=(m,e)$}
 			\label{fig:t2s1}
 		\end{subfigure}
 		~
 		\begin{subfigure}[b]{0.3\textwidth}
 			\centering
 			\includegraphics[width=\textwidth]{images/t2s3}
-			\caption{s=(m,m)}
+			\caption{$t=2, s=(m,m)$}
 			\label{fig:t2s3}
 		\end{subfigure}
-		\caption{Time step 2}
-		\label{fig:t2}
-	\end{figure}
 
-	\begin{figure}
-		\centering
 		\begin{subfigure}[b]{0.3\textwidth}
 			\centering
 			\includegraphics[width=\textwidth]{images/t3s0}
-			\caption{s=(e,e)}
+			\caption{$t=3, s=(e,e)$}
 			\label{fig:t3s0}
 		\end{subfigure}
 		~
 		\begin{subfigure}[b]{0.3\textwidth}
 			\centering
 			\includegraphics[width=\textwidth]{images/t3s1}
-			\caption{s=(m,e)}
+			\caption{$t=3, s=(m,e)$}
 			\label{fig:t3s1}
 		\end{subfigure}
 		~
 		\begin{subfigure}[b]{0.3\textwidth}
 			\centering
 			\includegraphics[width=\textwidth]{images/t3s3}
-			\caption{s=(m,m)}
+			\caption{$t=3, s=(m,m)$}
 			\label{fig:t3s3}
 		\end{subfigure}
-		\caption{Time step 3}
-		\label{fig:t3}
+		\caption{Pareto fronts in time-steps 2 and 3 for different states.
+			Colours denote different actions $m$ and $e$ represent a full and an
+			empty buffer respectively}
+		\label{fig:fronts_actions}
 	\end{figure}
 
 	\begin{figure}
@@ -410,92 +552,88 @@ class Q
 		\begin{subfigure}[b]{0.45\textwidth}
 			\centering
 			\includegraphics[width=\textwidth]{images/r3_side}
-			\caption{From the side}
+			\caption{$t=3$, From the side}
 			\label{fig:r3_side}
 		\end{subfigure}
 		~
 		\begin{subfigure}[b]{0.45\textwidth}
 			\centering
 			\includegraphics[width=\textwidth]{images/r3_diagonal}
-			\caption{Diagonally}
+			\caption{$t=3$, Diagonally}
 			\label{fig:r3_diagonal}
 		\end{subfigure}
 
 		\begin{subfigure}[b]{0.45\textwidth}
 			\centering
 			\includegraphics[width=\textwidth]{images/r3_nopareto}
-			\caption{Without pareto-optimisation}
+			\caption{$t=3$, Without pareto-optimisation}
 			\label{fig:r3_nopareto}
 		\end{subfigure}
 		~
 		\begin{subfigure}[b]{0.45\textwidth}
 			\centering
 			\includegraphics[width=\textwidth]{images/r3_divided}
-			\caption{With optimisation / without}
+			\caption{$t=3$, With optimisation / without}
 			\label{fig:r3_divided}
 		\end{subfigure}
-		\caption{Size of the pareto-front over different probability
-		distributions, t=3.}
-		\label{fig:3d_size}
-	\end{figure}
 
-	\begin{figure}
 		\centering
 		\begin{subfigure}[b]{0.45\textwidth}
 			\centering
 			\includegraphics[width=\textwidth]{images/r4_bird}
-			\caption{Overview}
+			\caption{$t=4$, Overview}
 			\label{fig:r4_bird}
 		\end{subfigure}
 		~
 		\begin{subfigure}[b]{0.45\textwidth}
 			\centering
 			\includegraphics[width=\textwidth]{images/r4_diagonal}
-			\caption{Diagonally}
+			\caption{$t=4$, Diagonally}
 			\label{fig:r4_diagonal}
 		\end{subfigure}
 		\caption{Size of the pareto-front over different probability
-		distributions, t=4.}
+		distributions}
+		\label{fig:3d_size}
 	\end{figure}
 
 	\begin{figure}
 		\centering
-		\begin{subfigure}[b]{0.45\textwidth}
+		\begin{subfigure}[b]{0.30\textwidth}
 			\centering
 			\includegraphics[width=\textwidth,height=7cm,keepaspectratio]{images/t4_12}
 			\caption{t=4, p=(0.1, 0.2)}
 			\label{fig:t4_12}
 		\end{subfigure}
 		~
-		\begin{subfigure}[b]{0.45\textwidth}
+		\begin{subfigure}[b]{0.30\textwidth}
 			\centering
 			\includegraphics[width=\textwidth,height=7cm,keepaspectratio]{images/t4_13}
 			\caption{t=4, p=(0.1, 0.3)}
 			\label{fig:t4_13}
 		\end{subfigure}
-
-		\begin{subfigure}[b]{0.45\textwidth}
+		~
+		\begin{subfigure}[b]{0.30\textwidth}
 			\centering
 			\includegraphics[width=\textwidth,height=7cm,keepaspectratio]{images/t4_26}
 			\caption{t=4, p=(0.2, 0.6)}
 			\label{fig:t4_26}
 		\end{subfigure}
-		~
-		\begin{subfigure}[b]{0.45\textwidth}
+
+		\begin{subfigure}[b]{0.30\textwidth}
 			\centering
 			\includegraphics[width=\textwidth,height=7cm,keepaspectratio]{images/t4_28}
 			\caption{t=4, p=(0.2, 0.8)}
 			\label{fig:t4_28}
 		\end{subfigure}
-
-		\begin{subfigure}[b]{0.45\textwidth}
+		~
+		\begin{subfigure}[b]{0.30\textwidth}
 			\centering
 			\includegraphics[width=\textwidth,height=7cm,keepaspectratio]{images/t4_47}
 			\caption{t=4, p=(0.4, 0.7)}
 			\label{fig:t4_47}
 		\end{subfigure}
 		~
-		\begin{subfigure}[b]{0.45\textwidth}
+		\begin{subfigure}[b]{0.30\textwidth}
 			\centering
 			\includegraphics[width=\textwidth,height=7cm,keepaspectratio]{images/t7_55}
 			\caption{t=7, p=(0.5, 0.5)}
@@ -504,46 +642,19 @@ class Q
 		\caption{Shape of the Pareto-front for different time steps and
 			probabilities with two agents. Black indicates no action, green and
 			red are for the different actions. Yellow in figure \ref{fig:t7_55} is
-			used to thow the overlap between values of the two actions. The axes
+			used to show the overlap between values of the two actions. The axes
 			represent the throughput of the respective agents}
 		\label{fig:many_fronts}
 	\end{figure}
 
 	\begin{figure}
 		\centering
-		\includegraphics[width=\textwidth,height=10cm,keepaspectratio]{images/t3_555}
+		\includegraphics[width=.7\textwidth,height=10cm,keepaspectratio]{images/t3_555}
 		\caption{t=3, p=(0.5, 0.5, 0.5)}
 		\label{fig:t3_555}
 	\end{figure}
 	% section results (end)
-	\restoregeometry
-
-	\begin{algorithm}
-		\captionof{algorithm}{Main Loop}
-		\begin{algorithmic}[1]
-			\Procedure{main}{$\mathit{n\_agents}, \mathit{time}, \mathit{p\_msg}[]$}
-			\State $\mathit{n\_states} \gets \Call{pow}{2, \mathit{n\_agents}}$
-			\State $Q[][] = Q[\mathit{max\_t}][\mathit{n\_states}]$ \Comment{Initialise Q}
-			\For {$t \gets 0, \mathit{time}$}
-			\For {$s \gets 0, \mathit{n\_states}$}
-			\State $\mathit{actions} \gets \Call{get\_actions}{s, \mathit{n\_agents}}$
-			\ForAll {$a \in \mathit{actions}$}
-			\State $\mathit{rewards}[] \gets \Call{get\_rewards}{a, s, \mathit{n\_states}, \mathit{p\_msg}}$
-			\Comment{States multiplied with probabilities}
-			\State $\mathit{new\_rewards} = \Call{add\_sets}{\mathit{rewards}}$
-			\If{$a$} \Comment{Action is not `do nothing'}
-			\ForAll {$r \in \mathit{rewards}$}
-			\State $\Call{increment}{}(r[\Call{action2index}{a}])$
-			\Comment{Add direct reward}
-			\State $Q[t][s].\Call{add}{a, r}$ \Comment{Try to add to set}
-			\EndFor
-			\EndIf
-			\EndFor
-			\EndFor
-			\EndFor
-			\EndProcedure
-		\end{algorithmic}
-	\end{algorithm}
+	%\restoregeometry
 
 	\begin{multicols}{2}
 	\section{Discussion}
@@ -591,7 +702,7 @@ class Q
 		\end{itemize}
 
 		Since the sets are in a large part distributed on a few lines, as can be
-		seen in figures \ref{fig:t2}, \ref{fig:t3}, and \ref{fig:many_fronts}, we
+		seen in figures \ref{fig:fronts_actions}, and \ref{fig:many_fronts}, we
 		could represent them as several sets, grouped by the lines they are on.
 		As all points are on a single line, the vectors in the set are sorted in
 		both the first and the second dimension.
@@ -601,6 +712,7 @@ class Q
 		the first two dimensions. By using these features we can reduce the
 		amount of vectors that need to be compared to about a quarter.
 
+	\vspace{0.5cm}
 	\begin{tablehere}
 		\centering
 		\begin{tabular}{|lll|}
@@ -645,8 +757,8 @@ class Q
 	% subsection aggressive_pruning (end)
 	% section discussion (end)
 	\end{multicols}
-	\pagebreak
 
+	\clearpage
 	\bibliographystyle{plainnat}
 	\bibliography{references}
 \end{document}
