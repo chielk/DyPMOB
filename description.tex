@@ -13,6 +13,7 @@
 \usepackage{algpseudocode}
 \usepackage{comment}
 \usepackage{amssymb}
+\usepackage{xcolor}
 \def\keywords{\vspace{.5em}
 	{\textbf{Keywords}:\,\relax
 }}
@@ -38,17 +39,15 @@
 		This article explores the broadcasting channel problem, focusing on
 		dynamic priority planning. We will show that using the Pareto-optimal set
 		of solutions significantly reduces the set size and computation time, but
-		that it is still infeasible. We propose a method for reducing computation
-		time of generating the Pareto-optimal set and show that pruning is
-		necessary.
+		that it is still infeasible. We make suggestions for a method for
+		reducing computation time of generating the Pareto-optimal set and show
+		that pruning is necessary.
 	\end{abstract}
 	\begin{keywords}
 		Dynamic Programming, MDP, Markov Decision Process, Multi-objective,
 		Planning, Broadcasting Channel, Dynamic Priority, Pareto-optimal set
 	\end{keywords}
 
-	%\tableofcontents
-	%\clearpage
 	\begin{multicols}{2}
 
 	\section{Introduction}
@@ -481,12 +480,17 @@
 
 	In figure \ref{fig:3d_size} we see that the size of the Pareto front is not
 	uniform for all probability distributions. The sizes are smallest where
-	probabilities are $0.5$ and on the diagonals of the quadrants. The
-	smaller set sizes represent the fact that these probability distributions
-	produce more duplicate vectors, which are only included once in the sets.
-	Note that some values are redundant, because with two agents with different
-	transition probabilities, the size of the set is independent of which agent
-	has which probability.
+	probabilities are $0.5$ and on the diagonals of the quadrants.
+	The shape of the graph is similar with and without optimisation, and figure
+	\ref{fig:r3_divided} shows that most reduction in size is achieved in the
+	larger sets.
+	The smaller set sizes can be explained by the fact that these probability
+	distributions produce more duplicate vectors, which are only included once
+	in the sets.
+
+	Note that some of the values shown are redundant, because with two agents
+	with different transition probabilities, the size of the set is independent
+	of which agent has which probability.
 
 	\vspace{.5cm}
 	\begin{figurehere}
@@ -503,7 +507,13 @@
 	and without Pareto-optimisation for time-steps up to 4. Although we can see
 	that the optimisation reduces the size more than an order of magnitude, it
 	also shows that that the size of the set grows faster than exponential in
-	both cases.
+	both cases (note that the $y$-axis is on la logarithmic scale).
+
+	$$
+	\displaystyle
+	Q(s, a)^* = {\color{red}\sum_{s'}} P(s'|s, a) \left(R(s, a) + {\color{red}\max_{a'}} Q^*(s', a')\right)
+	$$
+
 	The reason for this complexity can be found by analysing the Bellman
 	equation (\ref{eq:bellman_q}). The $\max$-operator returns a set of
 	solutions for each action, and the sets are summed. As an example to
@@ -514,18 +524,19 @@
 	(assuming that there were no duplicates and all states had the same set
 	size).
 
-	In figure \ref{fig:many_fronts} we can see the distribution of the
+	In figure \ref{fig:fronts_actions} we can see the distribution of the
 	Pareto-fronts per action for several different probabilities with two
 	agents. Black represents sending no message, red and green are for the
 	different agents, and in the last image the overlapping vectors are shown in
 	yellow. Striking is that the points are all located on up to two lines (or
 	hyperplanes) per action, where the lines are always perpendicular to the
-	line that makes a right angle from the origin. In figure
-	\ref{fig:fronts_actions} we can see that the points are also divided in two
-	lines per action, which suggests that the number of hyperplanes is
-	independent of the time-step, and presumably dependent on the number of
-	agents. Figure \ref{fig:t3_555} suggests that this may also hold true for
-	more dimensions.
+	line that makes half a right angle from the origin. In figure
+	\ref{fig:many_fronts} we can see that the points are also divided in two
+	lines per action for time-step 4, which suggests that the number of
+	hyperplanes is independent of the time-step, and presumably dependent on the
+	number of agents. Figure \ref{fig:t3_555} suggests that this may also hold
+	true for more dimensions, although this may also be because the transition
+	probabilities are the same for all agents.
 	\end{multicols}
 
 	\begin{figure}
@@ -684,7 +695,6 @@
 		\label{fig:t3_555}
 	\end{figure}
 	% section results (end)
-	%\restoregeometry
 
 	\newpage
 	\begin{multicols}{2}
@@ -707,14 +717,14 @@
 			\item No elements must be removed and the new vector must not be added
 		\end{enumerate}
 		When we consider the whole set per dimension, we can separate the vectors
-		in the set into three different sets of interest:
+		in the set into three different groups of interest:
 		\begin{enumerate}
 			\item Elements that may be strictly better
 			\item Elements that may be strictly worse
 			\item Elements that are not better or worse
 		\end{enumerate}
 		Sets 1 and 2 may intersect when the values of the vector that have been
-		compared are the same as the vector that is to be added.  The fist and
+		compared are the same as the vector that is to be added. The fist and
 		second categories contain values that are equal or larger or equal or
 		smaller in each evaluated dimension respectively. Vectors that have a
 		higher value in at least one dimension and a lower value in another, fall
@@ -794,25 +804,6 @@
 	\bibliography{references}
 \end{document}
 
-% Notes
-% FIXME: Only works on last two dimensions, only one dimension at the
-% time
-%
-% 1	.9		.4
-% 1	.8		.5
-% 1	.7		.6
-% 1	.6		.7
-% 1	.5		.8
-% 1	.4		.9
-%					<- last two dimensions are sorted; can be categorised in
-%						one go when the first n-2 values are the same
-% 1.1	.8		.5
-% 1.1	.7		.6
-% 1.1	.6		.7
-% 1.1	.5		.8
-% may work if we save all vectors together that start with the same
-% values
-%
 % Should be a tree for the first n-2 dimensions. C++: multimap
 %
 % 0.0	-> 0.0 -> [...]
