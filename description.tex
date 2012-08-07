@@ -43,7 +43,7 @@
 		necessary.
 	\end{abstract}
 	\begin{keywords}
-		Dynamic Programming, MDP, Markov Decision Process, Multiobjective,
+		Dynamic Programming, MDP, Markov Decision Process, Multi-objective,
 		Planning, Broadcasting Channel, Dynamic Priority, Pareto-optimal set
 	\end{keywords}
 
@@ -60,10 +60,10 @@
 	messages, in addition to throughput.
 	In section \ref{sec:problem_definition} we redefine the problem to account
 	for these considerations. Section \ref{sec:approach} covers the methods used
-	to meet these requirements. The results are described in section
-	\ref{sec:results}, and section \ref{sec:discussion} proposes an algorithm
-	that exploits the properties of the data to reduce the time complexity of
-	calculating the Pareto-optimal set.
+	to meet these requirements, and some implementation specifics. The results
+	are described in section \ref{sec:results}, and section \ref{sec:discussion}
+	proposes an algorithm that exploits the properties of the data to reduce the
+	time complexity of calculating the Pareto-optimal set.
 	% section introduction (end)
 
 	\section{Problem definition}
@@ -72,7 +72,7 @@
 	message can be sent at any time, otherwise conflicts will arise and no
 	message will come through. After a message is sent, the agents will know
 	whether a message was sent, a conflict has arisen, or no message was sent.
-	Agents have a single buffer that may contain a message. An example of a
+	Agents have a single buffer that may contain a message. A visualisation of a
 	two-agent setup is shown in figure \ref{fig:agents_ee}.
 
 	\vspace{0.5cm}
@@ -88,7 +88,9 @@
 	message with probability $p_i(s' |s, \vec{a})$.
 	The problem of optimising throughput has been solved for POMDPs
 	\citep{ooi1996decentralized, hansen2004dynamic}, but in this case we would
-	also like to avoid dominance of a single agent over the channel.
+	also like to take into account other goals such as avoiding dominance of a
+	single agent over the channel or guaranteeing a certain throughput for an
+	important agent.
 
 	\citet{hansen2004dynamic} have provided a solution with dynamic programming.
 	This method will be extended so that for any weight vector $\vec{w}$ it will
@@ -112,19 +114,24 @@
 	notice lags former more than in the latter.
 
 	An example of a collaborative system are rescue robots that work together on
-	mapping an environment. Sharing all information as it is acquired could be
-	too heavy a burden on the network, and dynamic prioritisation could be used
-	to make the most efficient use of the available bandwidth.
+	mapping an environment in order to effectively find and rescue victims from
+	sites such as collapsed buildings or mines. Sharing all information as it is
+	acquired could be too heavy a burden on the network, and dynamic
+	prioritisation could be used to make the most efficient use of the available
+	bandwidth. Priority of the agent would be based on measures such as expected
+	information gain.
 
 	A home network could include telephones, televisions, and personal
-	computers. Though we may want to prioritise the telephones and television to
-	guarantee continuity, we would also like to reduce lag in tasks that are
+	computers. Although we may want to prioritise the telephones and television
+	to guarantee continuity, we would also like to reduce lag in tasks that are
 	requested by the user such as loading a website. Telephone and television
 	prefer a specific continuous amount of throughput, but after some value do
 	not benefit much more, whereas other tasks may always benefit from more
-	throughput. When an alarm call is made, we would like to guarantee the
-	quality of the line before all else, but not drop other tasks if it can be
-	avoided.
+	throughput, such as downloading large files. When an alarm call is made, we
+	would like to guarantee the quality of the line before all else, but not
+	drop other tasks if it can be avoided. Many requirements may change over
+	time as devices phone calls are ended or personal computers are connected to
+	the network.
 	% subsection relevance (end)
 	% section problem_definition (end)
 
@@ -181,13 +188,14 @@
 		This method can also be extended to a multi-channel set-up: Where we
 		would reward only one agent, and only when it was the only agent to send a
 		message in the single-channel set-up, we can reward any number of agents
-		that sent a message, if there were not more than the number of channels.
+		that sent a message, if there were no more messages sent than the number
+		of channels.
 		% subsection reward_representation (end)
 
 		\subsection{State Representation}
 		\label{sub:state_representation}
 		The Bellman equation \ref{eq:bellman} describes the value $V$ of a state
-		$s$ given policy $\pi$. It is defined by return $R$ that is obtained in
+		$s$ given policy $\pi$. It is defined by the return $R$ that is obtained in
 		state $s$, plus the expected return in the following states $s'$given the
 		policy. Discount value $\gamma$ is a value in $[0, 1)$, and defines the
 		weight of future rewards. Low values can be seen as making the agent
@@ -255,6 +263,7 @@
 		message.
 		% subsection state_representation (end)
 
+		\clearpage
 		\subsection{Implementation}
 		\label{sub:implementation}
 		The planning algorithm was implemented in C++, as it allows for low-level
@@ -262,24 +271,17 @@
 		programming, and a wide array of libraries such as The Standard Template
 		Library (STL), are available.
 		The goal of the algorithm is to compute the values for every action in
-		every state of every time, given an optimal policy.
+		every state of every time, given that it will follow an optimal policy.
 
 		States and actions are represented as integers, which can be seen as
 		arrays of booleans. For example, binary $0100$ represents the
 		\emph{state} where only the third agent has a message, or the
 		\emph{action} where only the third agent sends a message, dependent on
-		context.
+		context. This representation is used to improve performance.
 
 		Algorithm \ref{alg:main} shows the main loop of the algorithm. Starting
 		from the last time-step (at $t=0$) we calculate the reward of all
 		possible actions.
-		The \textsc{try\_add} method described in algorithm
-		\ref{alg:add_v} adds the vector to the set $Q(s_t, a)$ if it is
-		Pareto-optimal. And if it is optimal, it also tries to add it to
-		$V(t_s)$. The loop exits early when it is apparent that the new vector
-		does not belong in the $Q(s_t, a)$ set. When it is sub-optimal it also does not
-		belong in the $V(s_t)$ set, as it contains the optimal vectors from all
-		actions, and is thus always as least as strict as $Q(s_t, a)$.
 		While the value at $t=0$ is only dependent on direct reward, for the
 		other time-steps it is the sum of the direct reward for taking the action
 		and the weighted average of the values of the possible transition states
@@ -317,6 +319,18 @@
 			\label{alg:main}
 		\end{algorithm}
 
+		\begin{multicols}{2}
+		The \textsc{try\_add} method described in algorithm
+		\ref{alg:add_v} adds the vector to the set $Q(s_t, a)$ if it is
+		Pareto-optimal. And if it is optimal, it also tries to add it to
+		$V(t_s)$. \textsc{try\_add\_v} works in the same way as
+		\textsc{try\_add}. The loop exits early when it is apparent that the new
+		vector does not belong in the $Q(s_t, a)$ set. When it is sub-optimal it
+		also does not belong in the $V(s_t)$ set, as it contains the optimal
+		vectors from all actions, and is thus always as least as strict as
+		$Q(s_t, a)$.
+		\end{multicols}
+
 		\begin{algorithm}[h!]
 			\captionof{algorithm}{Adding vectors to the set}
 			\begin{algorithmic}[1]
@@ -343,8 +357,10 @@
 		The function described in algorithm \ref{alg:add_sets} adds the sets of
 		sets of vectors. It is analogous to the summation symbol in the Bellman
 		equation. The resulting set consists of each possible sum of vectors from
-		each set. The algorithm works by setting the first set aside, and then
-		replaced by all sums with the vectors of each next set.
+		each set. The algorithm works by setting the first set aside. It is then
+		replaced by all sums with the vectors of the next set. This is repeated
+		for all sets. The number of sets is dependent on the number of actions
+		that can be taken in the current state.
 		\end{multicols}
 
 		\begin{algorithm}[h!]
@@ -368,15 +384,22 @@
 			\label{alg:add_sets}
 		\end{algorithm}
 
+		\clearpage
 		\begin{multicols}{2}
 		The \textsc{trans\_rewards} function generates all possible states and
 		compares them to the state minus the action. For example if the state is
 		$1111$ and the action is $0100$, the result is $1011$. Then all possible
 		transition states are compared to this state. In this case only $1111$
-		and $1011$ can follow. The transition probabilities are then calculated
-		by multiplying each $0$ in the base with the probability
-		$\mathit{p\_msg[i]}$ or $1 -\mathit{p\_msg[i]}$, dependent on whether it
-		becomes a $1$ or a $0$ respectively.
+		and $1011$ can follow. In the actual implementation a static mapping
+		between the \textit{least\_state} and the matching return value, so that
+		it can be looked up and is only calculated if it was not in the set yet.
+		The transition probabilities are then calculated by multiplying each $0$
+		in the base with the probability $\mathit{p\_msg[i]}$ or $1
+		-\mathit{p\_msg[i]}$, dependent on whether it becomes a $1$ (gets a new
+		message) or stays a $0$ (does not get a new message) respectively.
+		Since the transitions and transition probabilities are the same for every
+		time-step, it is possible to calculate the return value of
+		\textsc{trans\_rewards} only once for each possible state.
 		\end{multicols}
 
 		\begin{algorithm}[h!]
@@ -426,7 +449,7 @@
 
 	\begin{tablehere}
 		\centering
-		\begin{tabular*}{\textwidth}{|r|rrrrr|}
+		\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}|r|rrrrr|}
 			\hline
 			& 1 agent & 2 agents & 3 agents& 4 agents& 5 agents\\
 			\hline
@@ -444,17 +467,37 @@
 	\begin{multicols}{2}
 	\section{Results}
 	\label{sec:results}
+	To explore where a planning algorithm would benefit most in terms of total
+	throughput, a small experiment was conducted where a number of agents with
+	the same transition probabilities followed a turn-based policy.
 	Table \ref{tab:turns} shows that the turn-based approach is more efficient
 	as the number of agents and the probability of obtaining a new message
 	increases. This is because after the all agents have had their first turn,
 	the probability of having a message to send is $P(m)^n$, as there are
 	$n$ times that a new message can fill the buffer with probability $P(m)$.
+	The throughput suffers most when the probability of only one agent having a
+	message, but not being able to send it because it must wait for its turn is
+	most prevalent.
 
 	In figure \ref{fig:3d_size} we see that the size of the Pareto front is not
 	uniform for all probability distributions. The sizes are smallest where
 	probabilities are $0.5$ and on the diagonals of the quadrants. The
 	smaller set sizes represent the fact that these probability distributions
 	produce more duplicate vectors, which are only included once in the sets.
+	Note that some values are redundant, because with two agents with different
+	transition probabilities, the size of the set is independent of which agent
+	has which probability.
+
+	\vspace{.5cm}
+	\begin{figurehere}
+		\centering
+		\includegraphics[width=.8\columnwidth]{images/pareto_difference}
+		\captionof{figure}{Size of the Pareto-optimal set with (red) and without
+		(green) Pareto-optimisation on a logarithmic scale for different
+		time-steps}
+	   \label{fig:pareto_difference}
+	\end{figurehere}
+	\vspace{0.5cm}
 
 	Figure \ref{fig:pareto_difference} shows the difference in the set size with
 	and without Pareto-optimisation for time-steps up to 4. Although we can see
@@ -478,26 +521,13 @@
 	yellow. Striking is that the points are all located on up to two lines (or
 	hyperplanes) per action, where the lines are always perpendicular to the
 	line that makes a right angle from the origin. In figure
-	\ref{fig:fronts_actions} we can
-	see that the points are also divided in two lines per action, which suggests
-	that the number of hyperplanes is independent of the time-step, and
-	presumably dependent on the number of agents. Figure \ref{fig:t3_555}
-	suggests that this may also hold true for more dimensions.
-
-	\vspace{.5cm}
-	\begin{figurehere}
-		\centering
-		\includegraphics[width=.8\columnwidth]{images/pareto_difference}
-		\captionof{figure}{Size of the pareto-optimal set with (red) and without
-		(green) Pareto-optimisation on a logarithmic scale for different
-		time-steps}
-	   \label{fig:pareto_difference}
-	\end{figurehere}
-	\vspace{0.5cm}
-
+	\ref{fig:fronts_actions} we can see that the points are also divided in two
+	lines per action, which suggests that the number of hyperplanes is
+	independent of the time-step, and presumably dependent on the number of
+	agents. Figure \ref{fig:t3_555} suggests that this may also hold true for
+	more dimensions.
 	\end{multicols}
 
-	%\newgeometry{layoutvoffset=.5cm,textheight=.8\paperheight}
 	\begin{figure}
 		\centering
 		\begin{subfigure}[b]{0.3\textwidth}
@@ -656,6 +686,7 @@
 	% section results (end)
 	%\restoregeometry
 
+	\newpage
 	\begin{multicols}{2}
 	\section{Discussion}
 	\label{sec:discussion}
